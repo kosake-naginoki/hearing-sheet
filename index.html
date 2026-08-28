@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>ホームページ制作 ヒアリングシート</title>
+<style>
+  :root {
+    --paper:      #F4F6F8;
+    --surface:    #FFFFFF;
+    --surface-2:  #EDF1F5;
+    --ink:        #14202C;
+    --ink-muted:  #5C6B7A;
+    --ink-faint:  #8C99A6;
+    --line:       #DCE3EA;
+    --line-soft:  #E8EDF2;
+    --accent:     #2C5D8F;
+    --accent-ink: #FFFFFF;
+    --accent-wash:#E4EDF6;
+    --good:       #3F7F5F;
+    --good-wash:  #E3F0E8;
+    --warn:       #A8712C;
+    --warn-wash:  #F7EEDF;
+    --danger:     #A8443C;
+    --danger-wash:#F7E5E3;
+    --shadow:     0 1px 2px rgba(20,32,44,.05), 0 8px 24px -12px rgba(20,32,44,.16);
+
+    --serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", serif;
+    --sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", "Menlo", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#101720; --surface:#18212B; --surface-2:#1F2A35;
+      --ink:#E3EAF1; --ink-muted:#9DAAB8; --ink-faint:#74828F;
+      --line:#2A3641; --line-soft:#222D38;
+      --accent:#7FB2E0; --accent-ink:#0D141C; --accent-wash:#1D2C3A;
+      --good:#82C09B; --good-wash:#1B2A23;
+      --warn:#D6A960; --warn-wash:#2C2519;
+      --danger:#E08A80; --danger-wash:#2E1D1B;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#101720; --surface:#18212B; --surface-2:#1F2A35;
+    --ink:#E3EAF1; --ink-muted:#9DAAB8; --ink-faint:#74828F;
+    --line:#2A3641; --line-soft:#222D38;
+    --accent:#7FB2E0; --accent-ink:#0D141C; --accent-wash:#1D2C3A;
+    --good:#82C09B; --good-wash:#1B2A23;
+    --warn:#D6A960; --warn-wash:#2C2519;
+    --danger:#E08A80; --danger-wash:#2E1D1B;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); font-size: 15px; line-height: 1.85;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 600; }
+
+  /* ---------- ヘッダー ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(10px); border-bottom: 1px solid var(--line);
+  }
+  .topbar-inner {
+    max-width: 1140px; margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .brand { display: flex; flex-direction: column; gap: 1px; margin-right: auto; min-width: 0; }
+  .brand strong { font-family: var(--serif); font-size: 17px; letter-spacing: .04em; font-weight: 600; }
+  .brand span { font-size: 11px; color: var(--ink-faint); letter-spacing: .1em; }
+
+  .save-state {
+    display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-muted);
+    background: var(--surface-2); border: 1px solid var(--line-soft);
+    padding: 5px 11px; border-radius: 999px; white-space: nowrap;
+  }
+  .save-state .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px var(--good-wash); }
+  .save-state.saving .dot { background: var(--warn); box-shadow: 0 0 0 3px var(--warn-wash); }
+
+  .overall { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-muted); }
+  .overall .bar { width: 130px; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+  .overall .bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .45s cubic-bezier(.3,.8,.3,1); }
+  .overall b { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
+
+  /* ---------- レイアウト ---------- */
+  .shell {
+    max-width: 1140px; margin: 0 auto; padding: 28px 24px 96px;
+    display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 32px; align-items: start;
+  }
+
+  /* ---------- タブ ---------- */
+  .rail { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 4px; }
+  .rail-note { font-size: 11.5px; color: var(--ink-faint); line-height: 1.7; padding: 0 10px 10px; }
+  .tab {
+    display: flex; align-items: center; gap: 11px; width: 100%;
+    padding: 11px 13px; border-radius: 9px; background: none; border: 1px solid transparent;
+    cursor: pointer; font-family: var(--sans); font-size: 14px; color: var(--ink-muted);
+    text-align: left; transition: background .15s, color .15s;
+  }
+  .tab:hover { background: var(--surface-2); color: var(--ink); }
+  .tab[aria-selected="true"] { background: var(--surface); color: var(--ink); font-weight: 600; border-color: var(--line); box-shadow: var(--shadow); }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab .ring { flex: none; }
+  .tab .ring circle { fill: none; stroke-width: 3; }
+  .tab .ring .track { stroke: var(--line); }
+  .tab .ring .fill { stroke: var(--accent); stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dasharray .5s cubic-bezier(.3,.8,.3,1); }
+  .tab .ring.done .fill { stroke: var(--good); }
+  .tab .label { flex: 1; min-width: 0; }
+  .tab .count { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  /* ---------- パネル ---------- */
+  .panel { display: none; animation: rise .3s ease both; }
+  .panel.active { display: block; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .panel { animation: none; } * { transition: none !important; } }
+
+  .panel-head { margin-bottom: 22px; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 6px; }
+  .panel-head h2 { font-family: var(--serif); font-size: 26px; letter-spacing: .02em; }
+  .panel-head p { margin: 8px 0 0; color: var(--ink-muted); font-size: 14px; max-width: 62ch; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .card > h3 { font-size: 15.5px; letter-spacing: .02em; }
+  .card > .hint { margin: 5px 0 16px; font-size: 13px; color: var(--ink-muted); }
+  .card:last-child { margin-bottom: 0; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  .field > label { font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .opt-tag { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; color: var(--ink-faint); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; font-weight: 400; }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+
+  input[type="text"], input[type="email"], input[type="tel"], input[type="url"], select, textarea {
+    width: 100%; font-family: var(--sans); font-size: 14.5px; color: var(--ink);
+    background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; line-height: 1.8; transition: border-color .15s, box-shadow .15s;
+  }
+  textarea { resize: vertical; min-height: 132px; }
+  textarea.tall { min-height: 200px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-wash); }
+  ::placeholder { color: var(--ink-faint); }
+
+  /* ---------- 選択肢 ---------- */
+  .choices { display: flex; flex-direction: column; gap: 9px; }
+  .choice { display: flex; gap: 11px; align-items: flex-start; border: 1px solid var(--line); border-radius: 10px; padding: 13px 15px; cursor: pointer; background: var(--surface); transition: border-color .15s, background .15s; }
+  .choice:hover { border-color: var(--accent); }
+  .choice input { margin: 4px 0 0; accent-color: var(--accent); flex: none; width: 17px; height: 17px; }
+  .choice-body { display: flex; flex-direction: column; gap: 2px; }
+  .choice-body b { font-size: 14.5px; font-weight: 600; }
+  .choice-body span { font-size: 12.5px; color: var(--ink-muted); line-height: 1.65; }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-wash); }
+  .choice:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .procon { margin-top: 11px; display: none; }
+  .procon.show { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .procon div { border-radius: 9px; padding: 12px 14px; font-size: 12.5px; line-height: 1.75; }
+  .procon .pro { background: var(--good-wash); border: 1px solid color-mix(in srgb, var(--good) 30%, transparent); }
+  .procon .con { background: var(--warn-wash); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); }
+  .procon h4 { margin: 0 0 4px; font-size: 11px; font-family: var(--mono); letter-spacing: .1em; }
+  .procon .pro h4 { color: var(--good); }
+  .procon .con h4 { color: var(--warn); }
+  .procon ul { margin: 0; padding-left: 1.1em; }
+
+  /* ---------- ページ別原稿 ---------- */
+  .page-block { border: 1px solid var(--line); border-radius: 11px; margin-bottom: 12px; overflow: hidden; background: var(--surface); }
+  .page-block > summary { list-style: none; cursor: pointer; padding: 15px 18px; display: flex; align-items: center; gap: 12px; background: var(--surface); }
+  .page-block > summary::-webkit-details-marker { display: none; }
+  .page-block > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .page-block .chev { color: var(--ink-faint); transition: transform .2s; flex: none; }
+  .page-block[open] .chev { transform: rotate(90deg); }
+  .page-block .pname { font-weight: 600; font-size: 14.5px; margin-right: auto; }
+  .page-block .status { font-family: var(--mono); font-size: 11px; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); color: var(--ink-faint); border: 1px solid var(--line-soft); white-space: nowrap; }
+  .page-block .status.filled { background: var(--good-wash); color: var(--good); border-color: transparent; }
+  .page-body { padding: 0 18px 18px; border-top: 1px solid var(--line-soft); }
+  .page-body .guide { font-size: 12.5px; color: var(--ink-muted); background: var(--surface-2); border-radius: 8px; padding: 10px 13px; margin: 14px 0 12px; line-height: 1.75; }
+  .counter { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---------- ファイル ---------- */
+  .drop { border: 1.5px dashed var(--line); border-radius: 11px; padding: 30px 20px; text-align: center; background: var(--paper); transition: border-color .15s, background .15s; cursor: pointer; }
+  .drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-wash); }
+  .drop b { display: block; font-size: 14.5px; margin-bottom: 3px; }
+  .drop span { font-size: 12.5px; color: var(--ink-muted); }
+  .files { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .files:empty { display: none; }
+  .files li { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); display: flex; flex-direction: column; }
+  .files .thumb { aspect-ratio: 4/3; background: var(--surface-2); display: grid; place-items: center; overflow: hidden; }
+  .files .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .files .meta { padding: 8px 10px; display: flex; align-items: center; gap: 8px; }
+  .files .meta span { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .files .meta small { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); }
+  .files li.sent { border-color: color-mix(in srgb, var(--good) 40%, transparent); }
+  .files li.sent .meta small { color: var(--good); }
+  .icon-btn { border: none; background: none; cursor: pointer; color: var(--ink-faint); padding: 2px 4px; border-radius: 5px; font-size: 15px; line-height: 1; }
+  .icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+
+  /* ---------- 確認・送信 ---------- */
+  .review { display: flex; flex-direction: column; gap: 8px; }
+  .review-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); }
+  .review-row .rname { font-weight: 600; font-size: 14px; margin-right: auto; }
+  .review-row .rbar { width: 96px; height: 5px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+  .review-row .rbar i { display: block; height: 100%; background: var(--accent); }
+  .review-row .rpct { font-family: var(--mono); font-size: 12px; width: 42px; text-align: right; font-variant-numeric: tabular-nums; }
+  .review-row .jump { font-size: 12px; color: var(--accent); background: none; border: none; cursor: pointer; font-family: var(--sans); }
+
+  .btn { font-family: var(--sans); font-size: 14.5px; font-weight: 600; padding: 11px 24px; border-radius: 9px; cursor: pointer; border: 1px solid transparent; transition: opacity .15s, background .15s; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover { opacity: .88; }
+  .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-ghost { background: var(--surface); color: var(--ink-muted); border-color: var(--line); }
+  .btn-ghost:hover { color: var(--ink); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .footnav { display: flex; gap: 10px; align-items: center; margin-top: 22px; flex-wrap: wrap; }
+  .footnav .spacer { margin-left: auto; }
+
+  .notice { border-radius: 9px; padding: 12px 14px; font-size: 13px; line-height: 1.75; margin-top: 14px; }
+  .notice.err { background: var(--danger-wash); border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent); color: var(--danger); }
+  .notice.ok  { background: var(--good-wash); border: 1px solid color-mix(in srgb, var(--good) 35%, transparent); color: var(--good); }
+
+  /* ---------- 送信オーバーレイ ---------- */
+  .overlay { position: fixed; inset: 0; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(4px); display: none; place-items: center; z-index: 50; padding: 24px; }
+  .overlay.show { display: grid; }
+  .overlay .box { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 28px 30px; width: min(420px, 100%); text-align: center; }
+  .overlay h3 { font-family: var(--serif); font-size: 19px; margin-bottom: 6px; }
+  .overlay p { margin: 0; font-size: 13.5px; color: var(--ink-muted); }
+  .overlay .pbar { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; margin: 18px 0 8px; }
+  .overlay .pbar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  .overlay .pnum { font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  /* ---------- 完了画面 ---------- */
+  .done-screen { display: none; max-width: 620px; margin: 60px auto; padding: 0 24px 80px; text-align: center; }
+  .done-screen.show { display: block; }
+  .done-screen .mark { width: 56px; height: 56px; border-radius: 50%; background: var(--good-wash); color: var(--good); display: grid; place-items: center; margin: 0 auto 18px; font-size: 26px; }
+  .done-screen h2 { font-family: var(--serif); font-size: 24px; margin-bottom: 10px; }
+  .done-screen p { color: var(--ink-muted); font-size: 14.5px; }
+  .done-screen .btn { margin-top: 22px; }
+
+  .toast { position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 20px); background: var(--ink); color: var(--paper); padding: 11px 20px; border-radius: 999px; font-size: 13.5px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 60; max-width: calc(100% - 32px); }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: 1fr; gap: 18px; padding: 18px 16px 80px; }
+    .rail { position: static; flex-direction: row; overflow-x: auto; gap: 6px; padding-bottom: 6px; }
+    .rail-note { display: none; }
+    .tab { width: auto; white-space: nowrap; padding: 9px 14px; }
+    .tab .count { display: none; }
+    .topbar-inner { padding: 12px 16px; gap: 12px; }
+    .overall .bar { width: 84px; }
+    .card { padding: 18px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <strong>ホームページ制作 ヒアリングシート</strong>
+      <span id="brandSub">お手すきのときに、少しずつご記入ください</span>
+    </div>
+    <div class="overall">
+      <span>全体</span>
+      <div class="bar"><i id="overallBar"></i></div>
+      <b id="overallPct">0%</b>
+    </div>
+    <div class="save-state" id="saveState">
+      <i class="dot"></i><span id="saveText">この端末に保存されます</span>
+    </div>
+  </div>
+</header>
+
+<div class="shell" id="shell">
+  <nav class="rail" role="tablist" aria-label="ヒアリング項目">
+    <p class="rail-note">全部まとめて書く必要はありません。分かるところから、何回かに分けてご記入ください。入力内容はこの端末に自動保存されます。</p>
+  </nav>
+
+  <main id="panels">
+
+    <!-- ===== 1. 基本情報 ===== -->
+    <section class="panel" data-tab="basic" role="tabpanel" aria-label="基本情報">
+      <div class="panel-head">
+        <span class="eyebrow">Step 01</span>
+        <h2>基本情報</h2>
+        <p>まずは御社のことと、ホームページで叶えたいことを教えてください。空欄のままでも先に進めます。</p>
+      </div>
+
+      <div class="card">
+        <h3>お客様の情報</h3>
+        <p class="hint">ご連絡と、サイトへの掲載に使います。</p>
+        <div class="grid-2">
+          <div class="field"><label>会社名・団体名</label><input type="text" data-key="companyName" placeholder="株式会社なぎのき"></div>
+          <div class="field"><label>ご担当者名</label><input type="text" data-key="personName" placeholder="山田 太郎"></div>
+          <div class="field"><label>メールアドレス</label><input type="email" data-key="email" placeholder="info@example.com" autocomplete="email"></div>
+          <div class="field"><label>お電話番号 <span class="opt-tag">任意</span></label><input type="tel" data-key="tel" placeholder="000-0000-0000"></div>
+          <div class="field"><label>現在のホームページ <span class="opt-tag">任意</span></label><input type="url" data-key="currentUrl" placeholder="https://example.com"></div>
+          <div class="field"><label>事業の内容</label><input type="text" data-key="business" placeholder="例）建設業／飲食店／福祉サービス"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>ホームページの目的</h3>
+        <p class="hint">いちばん近いものを1つ選んでください。あとから変えられます。</p>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="purpose" data-key="purpose" value="集客・お問い合わせを増やしたい"><span class="choice-body"><b>集客・お問い合わせを増やしたい</b><span>新しいお客様に見つけてもらうことが目的</span></span></label>
+          <label class="choice"><input type="radio" name="purpose" data-key="purpose" value="会社の信頼感を示したい"><span class="choice-body"><b>会社の信頼感を示したい</b><span>名刺代わり。取引先や採用の場で見せられる</span></span></label>
+          <label class="choice"><input type="radio" name="purpose" data-key="purpose" value="採用・求人に使いたい"><span class="choice-body"><b>採用・求人に使いたい</b><span>働く人に向けて、職場の雰囲気を伝えたい</span></span></label>
+          <label class="choice"><input type="radio" name="purpose" data-key="purpose" value="今のサイトを新しくしたい"><span class="choice-body"><b>今のサイトを新しくしたい</b><span>古くなった・スマホで見づらいなど</span></span></label>
+        </div>
+        <div class="field" style="margin-top:16px">
+          <label>そのほか、伝えておきたいこと <span class="opt-tag">任意</span></label>
+          <textarea data-key="purposeFree" placeholder="うまく言葉にならなくても大丈夫です。思いつくままにどうぞ。"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>ご予算とご希望の時期</h3>
+        <div class="grid-2">
+          <div class="field">
+            <label>ご予算の目安</label>
+            <select data-key="budget">
+              <option value="">選んでください</option>
+              <option>まだ決めていない／相談したい</option>
+              <option>〜20万円</option><option>20〜50万円</option>
+              <option>50〜100万円</option><option>100万円以上</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>公開したい時期</label>
+            <select data-key="deadline">
+              <option value="">選んでください</option>
+              <option>急ぎではない</option><option>3か月以内</option>
+              <option>2か月以内</option><option>1か月以内</option>
+              <option>希望日あり（右に記入）</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>時期についての補足 <span class="opt-tag">任意</span></label><input type="text" data-key="deadlineNote" placeholder="例）10月の展示会に間に合わせたい"></div>
+      </div>
+    </section>
+
+    <!-- ===== 2. デザイン・機能 ===== -->
+    <section class="panel" data-tab="design" role="tabpanel" aria-label="デザイン・機能">
+      <div class="panel-head">
+        <span class="eyebrow">Step 02</span>
+        <h2>デザイン・機能</h2>
+        <p>「こんな雰囲気がいい」「これができたら嬉しい」を選んでいただくだけで大丈夫です。専門用語には補足を付けています。</p>
+      </div>
+
+      <div class="card">
+        <h3>サイトの雰囲気</h3>
+        <p class="hint">当てはまるものをいくつでも選べます。</p>
+        <div class="choices">
+          <label class="choice"><input type="checkbox" data-key="tone_clean" value="清潔感・シンプル"><span class="choice-body"><b>清潔感・シンプル</b><span>余白を広く、色数を抑えた落ち着いた印象</span></span></label>
+          <label class="choice"><input type="checkbox" data-key="tone_warm" value="やさしい・あたたかい"><span class="choice-body"><b>やさしい・あたたかい</b><span>丸みのある文字、やわらかい色づかい</span></span></label>
+          <label class="choice"><input type="checkbox" data-key="tone_trust" value="信頼感・かっちり"><span class="choice-body"><b>信頼感・かっちり</b><span>紺やグレーを基調にした誠実な印象</span></span></label>
+          <label class="choice"><input type="checkbox" data-key="tone_pop" value="元気・にぎやか"><span class="choice-body"><b>元気・にぎやか</b><span>写真を大きく、色を効かせた明るい印象</span></span></label>
+        </div>
+        <div class="field" style="margin-top:16px">
+          <label>使いたい色・避けたい色 <span class="opt-tag">任意</span></label>
+          <input type="text" data-key="colorNote" placeholder="例）ロゴに合わせて緑を使いたい／赤は避けたい">
+        </div>
+        <div class="field">
+          <label>参考にしたいサイト <span class="opt-tag">任意</span></label>
+          <textarea data-key="refSites" placeholder="URLでも、「〇〇のお店のサイトみたいな感じ」でも構いません。"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>お問い合わせ機能</h3>
+        <p class="hint">お客様からご連絡を受け取る仕組みです。選ぶと、それぞれの良い点・注意点が出ます。</p>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="contact" data-key="contact" value="外部ツールを使う" data-procon="contact-ext"><span class="choice-body"><b>外部ツールを使う</b><span>Googleフォームなど、既にあるサービスを埋め込みます</span></span></label>
+          <label class="choice"><input type="radio" name="contact" data-key="contact" value="サイトに組み込んで作る" data-procon="contact-own"><span class="choice-body"><b>サイトに組み込んで作る</b><span>デザインを揃えたフォームを制作します</span></span></label>
+          <label class="choice"><input type="radio" name="contact" data-key="contact" value="電話・メールの掲載だけでよい" data-procon="contact-none"><span class="choice-body"><b>電話・メールの掲載だけでよい</b><span>フォームは作らず、連絡先だけ載せます</span></span></label>
+        </div>
+        <div class="procon" id="pc-contact-ext">
+          <div class="pro"><h4>MERIT</h4><ul><li>費用を抑えられ、すぐ使えます</li><li>迷惑メール対策が最初から入っています</li></ul></div>
+          <div class="con"><h4>NOTE</h4><ul><li>見た目がサイトと少し変わります</li><li>ツール提供元のロゴが入る場合があります</li></ul></div>
+        </div>
+        <div class="procon" id="pc-contact-own">
+          <div class="pro"><h4>MERIT</h4><ul><li>デザインを完全に揃えられます</li><li>項目を自由に決められます</li></ul></div>
+          <div class="con"><h4>NOTE</h4><ul><li>制作費が追加になります</li><li>迷惑メール対策を別途組み込みます</li></ul></div>
+        </div>
+        <div class="procon" id="pc-contact-none">
+          <div class="pro"><h4>MERIT</h4><ul><li>いちばん手軽で、費用もかかりません</li></ul></div>
+          <div class="con"><h4>NOTE</h4><ul><li>電話が苦手なお客様を取りこぼす可能性があります</li></ul></div>
+        </div>
+        <div class="field" style="margin-top:16px">
+          <label>お問い合わせについてのご要望 <span class="opt-tag">任意</span></label>
+          <textarea data-key="contactFree" placeholder="例）予約したい日時を選べるようにしたい／担当者ごとに振り分けたい　など"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>あると嬉しい機能</h3>
+        <p class="hint">迷ったら選ばずに進んでください。打ち合わせで一緒に決められます。</p>
+        <div class="choices">
+          <label class="choice"><input type="checkbox" data-key="fn_news" value="お知らせを自分で更新したい"><span class="choice-body"><b>お知らせを自分で更新したい</b><span>更新用の管理画面をご用意します</span></span></label>
+          <label class="choice"><input type="checkbox" data-key="fn_map" value="地図を載せたい"><span class="choice-body"><b>地図を載せたい</b><span>Googleマップを埋め込みます</span></span></label>
+          <label class="choice"><input type="checkbox" data-key="fn_sns" value="SNSと連携したい"><span class="choice-body"><b>SNSと連携したい</b><span>InstagramやXの投稿を表示します</span></span></label>
+          <label class="choice"><input type="checkbox" data-key="fn_blog" value="ブログを書きたい"><span class="choice-body"><b>ブログを書きたい</b><span>記事を積み重ねて検索に強くします</span></span></label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 3. ページ別原稿 ===== -->
+    <section class="panel" data-tab="copy" role="tabpanel" aria-label="ページ別原稿">
+      <div class="panel-head">
+        <span class="eyebrow">Step 03</span>
+        <h2>ページ別の原稿</h2>
+        <p>文章は完成していなくて構いません。箇条書きやメモのままで大丈夫です。こちらで整えます。</p>
+      </div>
+
+      <details class="page-block" open>
+        <summary><svg class="chev" width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M2 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="pname">トップページ</span><span class="status" data-status-for="copy_top">未記入</span></summary>
+        <div class="page-body">
+          <p class="guide">最初に見える1〜2行のキャッチコピーと、伝えたいことを3つほど。「誰に」「何を」してあげられるかが伝わると強くなります。</p>
+          <textarea class="tall" data-key="copy_top" data-counter placeholder="例）地域のみなさまの暮らしを、40年支えてきました。&#10;・創業40年の実績&#10;・自社施工だから安心価格&#10;・見積り無料、当日対応可"></textarea>
+          <div class="counter" data-count-for="copy_top">0 文字</div>
+        </div>
+      </details>
+
+      <details class="page-block">
+        <summary><svg class="chev" width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M2 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="pname">会社概要</span><span class="status" data-status-for="copy_about">未記入</span></summary>
+        <div class="page-body">
+          <p class="guide">会社名・所在地・代表者名・設立年・従業員数・事業内容など。パンフレットの丸写しでも構いません。</p>
+          <textarea class="tall" data-key="copy_about" data-counter placeholder="会社名：&#10;所在地：&#10;代表者：&#10;設立：&#10;事業内容："></textarea>
+          <div class="counter" data-count-for="copy_about">0 文字</div>
+        </div>
+      </details>
+
+      <details class="page-block">
+        <summary><svg class="chev" width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M2 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="pname">サービス・事業内容</span><span class="status" data-status-for="copy_service">未記入</span></summary>
+        <div class="page-body">
+          <p class="guide">扱っているサービスを、ひとつずつ。料金や対応エリアが決まっていれば一緒に書いてください。</p>
+          <textarea class="tall" data-key="copy_service" data-counter placeholder="■ サービス名&#10;内容：&#10;料金：&#10;対応エリア："></textarea>
+          <div class="counter" data-count-for="copy_service">0 文字</div>
+        </div>
+      </details>
+
+      <details class="page-block">
+        <summary><svg class="chev" width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M2 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="pname">お客様の声・実績</span><span class="status" data-status-for="copy_voice">未記入</span></summary>
+        <div class="page-body">
+          <p class="guide">実際にいただいた感想や、施工事例など。掲載の許可が取れているものだけをお書きください。</p>
+          <textarea data-key="copy_voice" data-counter placeholder="例）〇〇市 A様／「相談から工事まで丁寧に対応してもらえました」"></textarea>
+          <div class="counter" data-count-for="copy_voice">0 文字</div>
+        </div>
+      </details>
+
+      <details class="page-block">
+        <summary><svg class="chev" width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M2 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="pname">お問い合わせページ</span><span class="status" data-status-for="copy_contact">未記入</span></summary>
+        <div class="page-body">
+          <p class="guide">受付時間、定休日、フォームに入れたい項目など。</p>
+          <textarea data-key="copy_contact" data-counter placeholder="受付時間：平日 9:00〜18:00&#10;定休日：土日祝&#10;フォーム項目：お名前／メール／電話／ご相談内容"></textarea>
+          <div class="counter" data-count-for="copy_contact">0 文字</div>
+        </div>
+      </details>
+
+      <div class="card" style="margin-top:16px">
+        <h3>そのほかに必要なページ <span class="opt-tag">任意</span></h3>
+        <p class="hint">上記以外に載せたいページがあれば教えてください。</p>
+        <textarea data-key="copy_other" placeholder="例）採用情報／よくある質問／料金表"></textarea>
+      </div>
+    </section>
+
+    <!-- ===== 4. 写真・ファイル ===== -->
+    <section class="panel" data-tab="files" role="tabpanel" aria-label="写真・ファイル">
+      <div class="panel-head">
+        <span class="eyebrow">Step 04</span>
+        <h2>写真・ファイル</h2>
+        <p>ロゴや店内の写真、参考にしたいチラシなどをお預かりします。スマホで撮った写真でも構いません。</p>
+      </div>
+
+      <div class="card">
+        <h3>ロゴデータ</h3>
+        <p class="hint">名刺や看板に使っているデータがあれば。画像・PDFどちらでも大丈夫です。</p>
+        <div class="drop" data-drop="logo" tabindex="0" role="button"><b>ここにドラッグ、またはクリックして選択</b><span>PNG / JPG / PDF ・ 1ファイル 20MB まで</span></div>
+        <ul class="files" data-list="logo"></ul>
+      </div>
+
+      <div class="card">
+        <h3>掲載したい写真</h3>
+        <p class="hint">外観・店内・スタッフ・商品など。多いほどサイトが良くなります。</p>
+        <div class="drop" data-drop="photo" tabindex="0" role="button"><b>ここにドラッグ、またはクリックして選択</b><span>JPG / PNG ・ 何枚でも（自動で軽くしてから送ります）</span></div>
+        <ul class="files" data-list="photo"></ul>
+        <div class="field" style="margin-top:16px">
+          <label>写真についての補足 <span class="opt-tag">任意</span></label>
+          <textarea data-key="photoNote" placeholder="例）3枚目はトップページの一番上に使ってほしい／顔が写っている人は掲載許可済みです"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>そのほかの資料</h3>
+        <p class="hint">会社パンフレット、料金表、以前のホームページの資料など。</p>
+        <div class="drop" data-drop="doc" tabindex="0" role="button"><b>ここにドラッグ、またはクリックして選択</b><span>PDF / Word / Excel / 画像</span></div>
+        <ul class="files" data-list="doc"></ul>
+      </div>
+    </section>
+
+    <!-- ===== 5. 確認・送信 ===== -->
+    <section class="panel" data-tab="submit" role="tabpanel" aria-label="確認・送信">
+      <div class="panel-head">
+        <span class="eyebrow">Step 05</span>
+        <h2>内容の確認と送信</h2>
+        <p>すべて埋まっていなくても送信できます。送信後も、同じURLから追記して再送信していただけます。</p>
+      </div>
+
+      <div class="card">
+        <h3>記入状況</h3>
+        <p class="hint">気になるところがあれば「見る」から戻れます。</p>
+        <div class="review" id="reviewList"></div>
+      </div>
+
+      <div class="card">
+        <h3>送信</h3>
+        <p class="hint">送信すると、担当者にメールで通知が届きます。折り返しご連絡いたします。</p>
+        <div class="choices">
+          <label class="choice"><input type="checkbox" data-key="agree" value="同意する"><span class="choice-body"><b>入力内容を制作会社に送信することに同意します</b><span>お預かりした情報は、本件の制作以外には使用しません</span></span></label>
+        </div>
+        <div class="footnav">
+          <button class="btn btn-ghost" id="btnClear" type="button">入力内容を消す</button>
+          <span class="spacer"></span>
+          <button class="btn btn-primary" id="btnSubmit" type="button">この内容で送信する</button>
+        </div>
+        <div id="submitNotice"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- 完了画面 -->
+<div class="done-screen" id="doneScreen">
+  <div class="mark" aria-hidden="true">✓</div>
+  <h2>送信が完了しました</h2>
+  <p>ご記入ありがとうございました。内容を確認のうえ、担当者よりご連絡いたします。<br>あとから思い出したことがあれば、このページに戻って追記・再送信していただけます。</p>
+  <button class="btn btn-ghost" id="btnBack" type="button">入力画面に戻る</button>
+</div>
+
+<!-- 送信中オーバーレイ -->
+<div class="overlay" id="overlay" role="status" aria-live="polite">
+  <div class="box">
+    <h3 id="ovTitle">送信しています</h3>
+    <p id="ovMsg">このページを閉じずにお待ちください</p>
+    <div class="pbar"><i id="ovBar"></i></div>
+    <div class="pnum" id="ovNum"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =========================================================
+     設定：GAS の Web アプリ URL をここに貼り付けてください
+     （Code.gs をデプロイして得られる https://script.google.com/macros/s/…/exec）
+     ========================================================= */
+  var GAS_URL = "https://script.google.com/macros/s/AKfycbxmgGaFrCMdE_MB4pIQWULZKgpNewloCLBnAZf78KzmxH-vzesB2QSI9Zs5q9BxoaEU/exec";
+
+  /* 画像の自動圧縮設定（スマホ写真をそのまま送るとGASの上限に当たるため） */
+  var IMG_MAX_EDGE = 1600;   // 長辺の最大px
+  var IMG_QUALITY  = 0.82;   // JPEG品質
+  var MAX_FILE_MB  = 20;     // 圧縮前の受付上限
+
+  var TABS = [
+    { id: "basic",  label: "基本情報" },
+    { id: "design", label: "デザイン・機能" },
+    { id: "copy",   label: "ページ別原稿" },
+    { id: "files",  label: "写真・ファイル" },
+    { id: "submit", label: "確認・送信" }
+  ];
+
+  /* ---- 案件ID（?id=xxxx）。無ければ端末ごとの仮IDを発行して使い回す ---- */
+  var params = new URLSearchParams(location.search);
+  var projectId = (params.get("id") || "").trim();
+  if (!projectId) {
+    try {
+      projectId = localStorage.getItem("hs-fallback-id") || "";
+      if (!projectId) {
+        projectId = "guest-" + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem("hs-fallback-id", projectId);
+      }
+    } catch (e) { projectId = "guest"; }
+  }
+  var STORAGE_KEY = "hearing-sheet::" + projectId;
+
+  var rail = document.querySelector(".rail");
+  var panels = Array.prototype.slice.call(document.querySelectorAll(".panel"));
+  var state = {};
+  var files = { logo: [], photo: [], doc: [] };
+
+  /* ---------- タブ ---------- */
+  TABS.forEach(function (t, i) {
+    var b = document.createElement("button");
+    b.className = "tab"; b.type = "button";
+    b.setAttribute("role", "tab"); b.dataset.tab = t.id;
+    b.setAttribute("aria-selected", i === 0 ? "true" : "false");
+    b.innerHTML =
+      '<svg class="ring" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">' +
+        '<circle class="track" cx="10" cy="10" r="8"></circle>' +
+        '<circle class="fill" cx="10" cy="10" r="8" stroke-dasharray="0 50.3"></circle>' +
+      '</svg><span class="label"></span><span class="count"></span>';
+    b.querySelector(".label").textContent = t.label;
+    b.addEventListener("click", function () { show(t.id); });
+    rail.appendChild(b);
+  });
+  panels[0].classList.add("active");
+
+  function show(id) {
+    document.querySelectorAll(".tab").forEach(function (b) {
+      b.setAttribute("aria-selected", String(b.dataset.tab === id));
+    });
+    panels.forEach(function (p) { p.classList.toggle("active", p.dataset.tab === id); });
+    if (id === "submit") renderReview();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  /* ---------- 保存・復元 ---------- */
+  var saveTimer = null;
+  function save() {
+    var el = document.getElementById("saveState");
+    el.classList.add("saving");
+    document.getElementById("saveText").textContent = "保存しています…";
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      el.classList.remove("saving");
+      var d = new Date();
+      document.getElementById("saveText").textContent =
+        "保存済み " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+    }, 550);
+  }
+  function pad(n) { return String(n).padStart(2, "0"); }
+
+  function restore() {
+    var raw = null;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    if (!raw) return;
+    try { state = JSON.parse(raw) || {}; } catch (e) { state = {}; return; }
+    document.querySelectorAll("[data-key]").forEach(function (el) {
+      var v = state[el.dataset.key];
+      if (v === undefined || v === null) return;
+      if (el.type === "checkbox") el.checked = !!v;
+      else if (el.type === "radio") el.checked = (el.value === v);
+      else el.value = v;
+    });
+    toast("前回の入力内容を復元しました");
+  }
+
+  /* ---------- 入力 ---------- */
+  document.querySelectorAll("[data-key]").forEach(function (el) {
+    var ev = (el.tagName === "SELECT" || el.type === "radio" || el.type === "checkbox") ? "change" : "input";
+    el.addEventListener(ev, function () {
+      if (el.type === "checkbox") state[el.dataset.key] = el.checked ? el.value : "";
+      else state[el.dataset.key] = el.value;
+      save(); refresh();
+      if (el.type === "radio") syncProCon(el.name);
+    });
+  });
+
+  function syncProCon(name) {
+    document.querySelectorAll('input[name="' + name + '"]').forEach(function (r) {
+      var box = r.dataset.procon && document.getElementById("pc-" + r.dataset.procon);
+      if (box) box.classList.toggle("show", r.checked);
+    });
+  }
+
+  /* ---------- 文字数カウンタ ---------- */
+  document.querySelectorAll("[data-counter]").forEach(function (ta) {
+    var out = document.querySelector('[data-count-for="' + ta.dataset.key + '"]');
+    ta.addEventListener("input", function () {
+      out.textContent = ta.value.length + " 文字";
+      var st = document.querySelector('[data-status-for="' + ta.dataset.key + '"]');
+      if (st) {
+        var ok = ta.value.trim().length > 0;
+        st.textContent = ok ? "記入あり" : "未記入";
+        st.classList.toggle("filled", ok);
+      }
+    });
+  });
+
+  /* ---------- ファイル ---------- */
+  document.querySelectorAll("[data-drop]").forEach(function (drop) {
+    var kind = drop.dataset.drop;
+    var input = document.createElement("input");
+    input.type = "file"; input.multiple = true; input.hidden = true;
+    if (kind === "photo") input.accept = "image/*";
+    drop.after(input);
+
+    drop.addEventListener("click", function () { input.click(); });
+    drop.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); }
+    });
+    drop.addEventListener("dragover", function (e) { e.preventDefault(); drop.classList.add("over"); });
+    drop.addEventListener("dragleave", function () { drop.classList.remove("over"); });
+    drop.addEventListener("drop", function (e) {
+      e.preventDefault(); drop.classList.remove("over"); addFiles(kind, e.dataTransfer.files);
+    });
+    input.addEventListener("change", function () { addFiles(kind, input.files); input.value = ""; });
+  });
+
+  function addFiles(kind, list) {
+    var added = 0, skipped = [];
+    Array.prototype.forEach.call(list, function (f) {
+      if (f.size > MAX_FILE_MB * 1024 * 1024) { skipped.push(f.name); return; }
+      var rec = { file: f, name: f.name, size: f.size, url: "", sent: false };
+      if (/^image\//.test(f.type)) rec.url = URL.createObjectURL(f);
+      files[kind].push(rec); added++;
+    });
+    renderFiles(kind); refresh();
+    if (skipped.length) toast(skipped.length + " 件はサイズが大きいため追加できませんでした（1ファイル " + MAX_FILE_MB + "MB まで）");
+    else if (added) toast(added + " 件を追加しました");
+  }
+
+  function renderFiles(kind) {
+    var ul = document.querySelector('[data-list="' + kind + '"]');
+    ul.innerHTML = "";
+    files[kind].forEach(function (f, i) {
+      var li = document.createElement("li");
+      if (f.sent) li.classList.add("sent");
+      li.innerHTML =
+        '<div class="thumb">' + (f.url ? '<img alt="" src="' + f.url + '">' : '<span style="font-size:22px">📄</span>') + '</div>' +
+        '<div class="meta"><span></span><small></small>' +
+        '<button class="icon-btn" type="button" aria-label="削除">×</button></div>';
+      li.querySelector(".meta span").textContent = f.name;
+      li.querySelector(".meta small").textContent = f.sent ? "送信済" : Math.max(1, Math.round(f.size / 1024)) + "KB";
+      li.querySelector(".icon-btn").addEventListener("click", function () {
+        if (f.url) URL.revokeObjectURL(f.url);
+        files[kind].splice(i, 1); renderFiles(kind); refresh();
+      });
+      ul.appendChild(li);
+    });
+  }
+
+  /* ---------- 進捗 ---------- */
+  function progressOf(panel) {
+    var groups = {}, total = 0, filled = 0;
+    panel.querySelectorAll("[data-key]").forEach(function (el) {
+      if (el.dataset.key === "agree") return;              // 同意チェックは進捗に含めない
+      if (el.type === "radio") {
+        if (!(el.name in groups)) groups[el.name] = false;
+        if (el.checked) groups[el.name] = true; return;
+      }
+      if (el.type === "checkbox") {
+        var k = "cb:" + panel.dataset.tab;
+        if (!(k in groups)) groups[k] = false;
+        if (el.checked) groups[k] = true; return;
+      }
+      total++; if (String(el.value).trim()) filled++;
+    });
+    Object.keys(groups).forEach(function (k) { total++; if (groups[k]) filled++; });
+    if (panel.dataset.tab === "files") {
+      total += 3;
+      ["logo", "photo", "doc"].forEach(function (k) { if (files[k].length) filled++; });
+    }
+    return total ? filled / total : 0;
+  }
+
+  function refresh() {
+    var sum = 0, n = 0;
+    panels.forEach(function (p) {
+      if (p.dataset.tab === "submit") return;
+      var r = progressOf(p); sum += r; n++;
+      var tab = document.querySelector('.tab[data-tab="' + p.dataset.tab + '"]');
+      var ring = tab.querySelector(".ring");
+      var C = 2 * Math.PI * 8;
+      ring.querySelector(".fill").setAttribute("stroke-dasharray", (C * r).toFixed(2) + " " + C.toFixed(2));
+      ring.classList.toggle("done", r >= 0.999);
+      tab.querySelector(".count").textContent = Math.round(r * 100) + "%";
+    });
+    var pct = n ? Math.round((sum / n) * 100) : 0;
+    document.getElementById("overallBar").style.width = pct + "%";
+    document.getElementById("overallPct").textContent = pct + "%";
+  }
+
+  function renderReview() {
+    var box = document.getElementById("reviewList");
+    box.innerHTML = "";
+    panels.forEach(function (p) {
+      if (p.dataset.tab === "submit") return;
+      var r = Math.round(progressOf(p) * 100);
+      var name = TABS.filter(function (t) { return t.id === p.dataset.tab; })[0].label;
+      var row = document.createElement("div");
+      row.className = "review-row";
+      row.innerHTML =
+        '<span class="rname"></span><div class="rbar"><i></i></div>' +
+        '<span class="rpct"></span><button class="jump" type="button">見る →</button>';
+      row.querySelector(".rname").textContent = name;
+      row.querySelector(".rbar i").style.width = r + "%";
+      row.querySelector(".rpct").textContent = r + "%";
+      row.querySelector(".jump").addEventListener("click", function () { show(p.dataset.tab); });
+      box.appendChild(row);
+    });
+  }
+
+  /* ---------- 画像圧縮 / Base64 ---------- */
+  function toBase64(blob) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () { resolve(String(r.result).split(",")[1]); };
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+  }
+
+  function shrinkImage(file) {
+    return new Promise(function (resolve) {
+      if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { resolve({ blob: file, mime: file.type || "application/octet-stream", name: file.name }); return; }
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function () {
+        var scale = Math.min(1, IMG_MAX_EDGE / Math.max(img.width, img.height));
+        if (scale === 1 && file.size < 900 * 1024) { URL.revokeObjectURL(url); resolve({ blob: file, mime: file.type, name: file.name }); return; }
+        var cv = document.createElement("canvas");
+        cv.width = Math.round(img.width * scale);
+        cv.height = Math.round(img.height * scale);
+        var ctx = cv.getContext("2d");
+        ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height);
+        ctx.drawImage(img, 0, 0, cv.width, cv.height);
+        cv.toBlob(function (b) {
+          URL.revokeObjectURL(url);
+          if (!b) { resolve({ blob: file, mime: file.type, name: file.name }); return; }
+          resolve({ blob: b, mime: "image/jpeg", name: file.name.replace(/\.(png|webp)$/i, ".jpg") });
+        }, "image/jpeg", IMG_QUALITY);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve({ blob: file, mime: file.type || "application/octet-stream", name: file.name }); };
+      img.src = url;
+    });
+  }
+
+  /* ---------- GAS 通信 ----------
+     Content-Type を text/plain にすることで CORS プリフライトを回避する。
+     GAS 側は e.postData.contents を JSON.parse して受け取る。               */
+  function post(payload) {
+    return fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    }).then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    }).then(function (json) {
+      if (!json || json.ok !== true) throw new Error((json && json.error) || "サーバー側でエラーが発生しました");
+      return json;
+    });
+  }
+
+  /* ---------- 送信 ---------- */
+  var submitting = false;
+  document.getElementById("btnSubmit").addEventListener("click", function () {
+    if (submitting) return;
+    var notice = document.getElementById("submitNotice");
+    notice.innerHTML = "";
+
+    if (!GAS_URL) {
+      notice.innerHTML = '<div class="notice err">送信先が設定されていません。管理者に連絡してください（index.html の GAS_URL 未設定）。</div>';
+      return;
+    }
+    if (!state.agree) {
+      notice.innerHTML = '<div class="notice err">送信への同意にチェックをお願いします。</div>';
+      return;
+    }
+
+    var pending = [];
+    ["logo", "photo", "doc"].forEach(function (kind) {
+      files[kind].forEach(function (f) { if (!f.sent) pending.push({ kind: kind, rec: f }); });
+    });
+
+    submitting = true;
+    document.getElementById("btnSubmit").disabled = true;
+    var total = 1 + pending.length + 1;   // テキスト + ファイル + 仕上げ
+    var step = 0;
+    showOverlay(true, "送信しています", "このページを閉じずにお待ちください");
+    setProgress(step, total, "入力内容を送信中");
+
+    post({ type: "text", projectId: projectId, answers: state })
+      .then(function () {
+        step++; setProgress(step, total, pending.length ? "ファイルを送信中" : "仕上げ中");
+        // ファイルは1件ずつ順番に送る（まとめて送るとGASの上限を超えるため）
+        return pending.reduce(function (chain, item) {
+          return chain.then(function () {
+            return shrinkImage(item.rec.file)
+              .then(function (s) { return toBase64(s.blob).then(function (b64) { return { s: s, b64: b64 }; }); })
+              .then(function (r) {
+                return post({
+                  type: "file", projectId: projectId, kind: item.kind,
+                  name: r.s.name, mime: r.s.mime, base64: r.b64
+                });
+              })
+              .then(function () {
+                item.rec.sent = true; renderFiles(item.kind);
+                step++; setProgress(step, total, "ファイルを送信中（" + step + "／" + (total - 1) + "）");
+              });
+          });
+        }, Promise.resolve());
+      })
+      .then(function () {
+        setProgress(total - 1, total, "制作用のまとめを作成中");
+        return post({ type: "finalize", projectId: projectId });
+      })
+      .then(function () {
+        setProgress(total, total, "完了しました");
+        showOverlay(false);
+        document.getElementById("shell").style.display = "none";
+        document.getElementById("doneScreen").classList.add("show");
+        window.scrollTo({ top: 0 });
+      })
+      .catch(function (err) {
+        showOverlay(false);
+        notice.innerHTML = '<div class="notice err">送信できませんでした。通信環境をご確認のうえ、もう一度お試しください。<br>入力内容はこの端末に残っています。<br><small>' + escapeHtml(err.message || String(err)) + '</small></div>';
+      })
+      .then(function () {
+        submitting = false;
+        document.getElementById("btnSubmit").disabled = false;
+      });
+  });
+
+  document.getElementById("btnBack").addEventListener("click", function () {
+    document.getElementById("doneScreen").classList.remove("show");
+    document.getElementById("shell").style.display = "";
+    show("basic");
+  });
+
+  function showOverlay(on, title, msg) {
+    var ov = document.getElementById("overlay");
+    ov.classList.toggle("show", !!on);
+    if (title) document.getElementById("ovTitle").textContent = title;
+    if (msg) document.getElementById("ovMsg").textContent = msg;
+  }
+  function setProgress(done, total, msg) {
+    document.getElementById("ovBar").style.width = Math.round((done / total) * 100) + "%";
+    document.getElementById("ovNum").textContent = done + " / " + total;
+    if (msg) document.getElementById("ovMsg").textContent = msg;
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------- クリア ---------- */
+  document.getElementById("btnClear").addEventListener("click", function () {
+    if (!window.confirm("この端末に保存されている入力内容をすべて消します。よろしいですか？")) return;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    state = {};
+    document.querySelectorAll("[data-key]").forEach(function (el) {
+      if (el.type === "checkbox" || el.type === "radio") el.checked = false; else el.value = "";
+    });
+    document.querySelectorAll("[data-count-for]").forEach(function (c) { c.textContent = "0 文字"; });
+    document.querySelectorAll("[data-status-for]").forEach(function (s) { s.textContent = "未記入"; s.classList.remove("filled"); });
+    document.querySelectorAll(".procon").forEach(function (p) { p.classList.remove("show"); });
+    ["logo", "photo", "doc"].forEach(function (k) {
+      files[k].forEach(function (f) { if (f.url) URL.revokeObjectURL(f.url); });
+      files[k] = []; renderFiles(k);
+    });
+    refresh();
+    toast("入力内容を消しました");
+  });
+
+  /* ---------- トースト ---------- */
+  var toastTimer = null;
+  function toast(msg) {
+    var t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2800);
+  }
+
+  /* ---------- 初期化 ---------- */
+  restore();
+  ["contact", "purpose"].forEach(syncProCon);
+  document.querySelectorAll("[data-counter]").forEach(function (ta) { ta.dispatchEvent(new Event("input")); });
+  refresh();
+})();
+</script>
+</body>
+</html>
