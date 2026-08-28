@@ -333,6 +333,60 @@
   .item-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   @media (max-width: 560px) { .item-row2 { grid-template-columns: 1fr; } }
 
+  /* ---------- デザイン案のミニチュア ---------- */
+  .tones { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .tone {
+    border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    background: var(--surface); cursor: pointer; display: flex; flex-direction: column;
+    transition: border-color .15s, box-shadow .15s, transform .15s;
+  }
+  .tone:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .tone:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-wash); }
+  .tone:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tone input { position: absolute; opacity: 0; pointer-events: none; }
+
+  .tone-foot { padding: 11px 13px; display: flex; align-items: flex-start; gap: 9px; }
+  .tone-foot .box {
+    width: 17px; height: 17px; border-radius: 4px; border: 1.5px solid var(--line);
+    flex: none; margin-top: 2px; display: grid; place-items: center;
+    color: transparent; font-size: 11px; font-weight: 700; line-height: 1;
+  }
+  .tone:has(input:checked) .tone-foot .box {
+    background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+  }
+  .tone-foot b { font-size: 13.5px; display: block; }
+  .tone-foot span { font-size: 11.5px; color: var(--ink-muted); line-height: 1.55; display: block; }
+
+  /* ミニチュア本体：画像を使わず CSS だけで描く */
+  .mini {
+    aspect-ratio: 4 / 3; padding: 9px; display: flex; flex-direction: column; gap: 6px;
+    background: var(--mini-bg); border-bottom: 1px solid var(--line);
+  }
+  .mini .m-nav { display: flex; align-items: center; gap: 5px; }
+  .mini .m-logo { height: 7px; width: 26px; border-radius: var(--mini-r); background: var(--mini-ink); opacity: .85; }
+  .mini .m-links { margin-left: auto; display: flex; gap: 4px; }
+  .mini .m-links i { height: 4px; width: 12px; border-radius: 2px; background: var(--mini-ink); opacity: .3; }
+  .mini .m-hero {
+    border-radius: var(--mini-r); background: var(--mini-hero);
+    padding: var(--mini-pad); display: flex; flex-direction: column; gap: 4px; justify-content: center;
+    flex: var(--mini-heroflex);
+  }
+  .mini .m-hero .t1 { height: var(--mini-t1); width: 72%; border-radius: 2px; background: var(--mini-accent); }
+  .mini .m-hero .t2 { height: 4px; width: 52%; border-radius: 2px; background: var(--mini-ink); opacity: .35; }
+  .mini .m-hero .btn { height: 8px; width: 34px; border-radius: var(--mini-r); background: var(--mini-accent); margin-top: 3px; }
+  .mini .m-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; flex: 1; }
+  .mini .m-cards i { border-radius: var(--mini-r); background: var(--mini-card); display: block; }
+
+  /* 4つの雰囲気ごとの色・形 */
+  .mini.clean { --mini-bg:#FFFFFF; --mini-ink:#1F2933; --mini-accent:#33506B; --mini-hero:#EEF1F4; --mini-card:#F1F4F7; --mini-r:3px; --mini-pad:9px; --mini-t1:6px; --mini-heroflex:1.5; }
+  .mini.warm  { --mini-bg:#FFFBF5; --mini-ink:#4A3B2E; --mini-accent:#C98B54; --mini-hero:#F8ECDD; --mini-card:#F6E9D8; --mini-r:8px; --mini-pad:10px; --mini-t1:7px; --mini-heroflex:1.4; }
+  .mini.trust { --mini-bg:#FFFFFF; --mini-ink:#1B2430; --mini-accent:#1F3A5F; --mini-hero:#1F3A5F; --mini-card:#E7EBF0; --mini-r:1px; --mini-pad:8px; --mini-t1:6px; --mini-heroflex:1.3; }
+  .mini.trust .m-hero .t2 { background:#FFFFFF; opacity:.55; }
+  .mini.trust .m-hero .t1 { background:#FFFFFF; }
+  .mini.trust .m-hero .btn { background:#C8A24A; }
+  .mini.pop   { --mini-bg:#FFFFFF; --mini-ink:#2A2320; --mini-accent:#E2643C; --mini-hero:#FFE2D2; --mini-card:#FFEFE6; --mini-r:10px; --mini-pad:9px; --mini-t1:9px; --mini-heroflex:1.7; }
+  .mini.pop .m-cards { grid-template-columns: repeat(2, 1fr); }
+
 </style>
 </head>
 <body>
@@ -516,12 +570,13 @@
 
       <div class="card">
         <h3>サイトの雰囲気</h3>
-        <p class="hint">当てはまるものをいくつでも選べます。</p>
-        <div class="choices">
-          <label class="choice"><input type="checkbox" data-key="tone_clean" value="清潔感・シンプル"><span class="choice-body"><b>清潔感・シンプル</b><span>余白を広く、色数を抑えた落ち着いた印象</span></span></label>
-          <label class="choice"><input type="checkbox" data-key="tone_warm" value="やさしい・あたたかい"><span class="choice-body"><b>やさしい・あたたかい</b><span>丸みのある文字、やわらかい色づかい</span></span></label>
-          <label class="choice"><input type="checkbox" data-key="tone_trust" value="信頼感・かっちり"><span class="choice-body"><b>信頼感・かっちり</b><span>紺やグレーを基調にした誠実な印象</span></span></label>
-          <label class="choice"><input type="checkbox" data-key="tone_pop" value="元気・にぎやか"><span class="choice-body"><b>元気・にぎやか</b><span>写真を大きく、色を効かせた明るい印象</span></span></label>
+        <p class="hint">こんな見た目のイメージです。当てはまるものをいくつでも選べます。<br>
+        <small>※ 実際の配色や写真は、御社に合わせて調整します。あくまで方向性の確認です。</small></p>
+        <div class="tones">
+          <label class="tone"><input type="checkbox" data-key="tone_clean" value="清潔感・シンプル"><span class="mini clean" aria-hidden="true"><span class="m-nav"><span class="m-logo"></span><span class="m-links"><i></i><i></i><i></i></span></span><span class="m-hero"><span class="t1"></span><span class="t2"></span><span class="btn"></span></span><span class="m-cards"><i></i><i></i><i></i></span></span><span class="tone-foot"><span class="box">✓</span><span><b>清潔感・シンプル</b><span>余白を広く、色数を抑えた落ち着いた印象</span></span></span></label>
+          <label class="tone"><input type="checkbox" data-key="tone_warm" value="やさしい・あたたかい"><span class="mini warm" aria-hidden="true"><span class="m-nav"><span class="m-logo"></span><span class="m-links"><i></i><i></i><i></i></span></span><span class="m-hero"><span class="t1"></span><span class="t2"></span><span class="btn"></span></span><span class="m-cards"><i></i><i></i><i></i></span></span><span class="tone-foot"><span class="box">✓</span><span><b>やさしい・あたたかい</b><span>丸みのある形、やわらかい色づかい</span></span></span></label>
+          <label class="tone"><input type="checkbox" data-key="tone_trust" value="信頼感・かっちり"><span class="mini trust" aria-hidden="true"><span class="m-nav"><span class="m-logo"></span><span class="m-links"><i></i><i></i><i></i></span></span><span class="m-hero"><span class="t1"></span><span class="t2"></span><span class="btn"></span></span><span class="m-cards"><i></i><i></i><i></i></span></span><span class="tone-foot"><span class="box">✓</span><span><b>信頼感・かっちり</b><span>紺を基調にした、きちんとした印象</span></span></span></label>
+          <label class="tone"><input type="checkbox" data-key="tone_pop" value="元気・にぎやか"><span class="mini pop" aria-hidden="true"><span class="m-nav"><span class="m-logo"></span><span class="m-links"><i></i><i></i><i></i></span></span><span class="m-hero"><span class="t1"></span><span class="t2"></span><span class="btn"></span></span><span class="m-cards"><i></i><i></i></span></span><span class="tone-foot"><span class="box">✓</span><span><b>元気・にぎやか</b><span>写真を大きく、色を効かせた明るい印象</span></span></span></label>
         </div>
         <div class="field" style="margin-top:16px">
           <label>使いたい色・避けたい色 <span class="opt-tag">任意</span></label>
