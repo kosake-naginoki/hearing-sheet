@@ -302,6 +302,37 @@
     font-size: 12.5px; color: var(--ink-faint); text-align: center;
     padding: 18px 10px; border: 1px dashed var(--line-soft); border-radius: 10px; margin-bottom: 12px;
   }
+  /* ---------- カード形式の項目（人・Q&A・料金など） ---------- */
+  .fmt-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin: 14px 0 12px;
+  }
+  .fmt-bar > span { font-size: 12px; color: var(--ink-faint); }
+  .fmt-bar select {
+    width: auto; min-width: 160px; font-size: 13px; padding: 6px 10px;
+    background: var(--surface);
+  }
+
+  .item-card {
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 10px; background: var(--paper);
+  }
+  .item-head {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .item-no {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+    color: var(--accent); background: var(--accent-wash);
+    border-radius: 999px; padding: 2px 10px; flex: none;
+  }
+  .item-head .spacer { margin-left: auto; }
+  .item-grid { display: grid; gap: 10px; }
+  .item-grid .pair { display: flex; flex-direction: column; gap: 5px; }
+  .item-grid .pair > span { font-size: 12px; font-weight: 600; color: var(--ink-muted); }
+  .item-grid textarea { min-height: 84px; }
+  .item-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 560px) { .item-row2 { grid-template-columns: 1fr; } }
+
 </style>
 </head>
 <body>
@@ -554,7 +585,7 @@
       <div class="panel-head">
         <span class="eyebrow">Step 04</span>
         <h2>ページと原稿</h2>
-        <p>必要なページを足したり減らしたりできます。文章は完成していなくて構いません。箇条書きやメモのままで大丈夫です。</p>
+        <p>必要なページを足したり減らしたりできます。スタッフ紹介やQ&amp;Aのように「1つずつ増やしていく」書き方も選べます。文章は完成していなくて構いません。</p>
       </div>
 
       <div id="pageList"></div>
@@ -696,23 +727,65 @@
   ];
 
   /* 初期のページ構成。クライアントが自由に足し引きできる */
+  /* ページの入力形式。text=自由記述、それ以外はカードを増やしていく形式 */
+  var PAGE_TYPES = {
+    text:   { label: "自由記述（まとめて書く）" },
+    people: {
+      label: "人を追加していく（スタッフ紹介など）",
+      unit: "人目", addLabel: "＋ 人を追加",
+      fields: [
+        { key: "name", label: "お名前",      ph: "山田 太郎" },
+        { key: "role", label: "役職・担当",  ph: "代表 ／ 設計担当" },
+        { key: "text", label: "自己紹介",    ph: "この道20年。お客様の暮らしに寄り添う家づくりを心がけています。", area: true }
+      ],
+      render: function (it) {
+        var head = [it.name, it.role].filter(Boolean).join("（") + (it.role ? "）" : "");
+        return "■ " + (head || "（お名前未記入）") + "\n" + (it.text || "（自己紹介未記入）");
+      }
+    },
+    qa: {
+      label: "Q&Aを追加していく（よくある質問など）",
+      unit: "問目", addLabel: "＋ 質問を追加",
+      fields: [
+        { key: "q", label: "質問", ph: "見積りは無料ですか？" },
+        { key: "a", label: "答え", ph: "無料です。お気軽にご相談ください。", area: true }
+      ],
+      render: function (it) {
+        return "Q. " + (it.q || "（質問未記入）") + "\nA. " + (it.a || "（答え未記入）");
+      }
+    },
+    items: {
+      label: "項目を追加していく（料金表・事例など）",
+      unit: "件目", addLabel: "＋ 項目を追加",
+      fields: [
+        { key: "name", label: "項目名",       ph: "外壁塗装" },
+        { key: "sub",  label: "価格・補足",   ph: "80万円〜" },
+        { key: "text", label: "説明",         ph: "足場代込みの価格です。", area: true }
+      ],
+      render: function (it) {
+        var head = [it.name, it.sub].filter(Boolean).join(" ／ ");
+        return "■ " + (head || "（項目名未記入）") + "\n" + (it.text || "");
+      }
+    }
+  };
+
   var DEFAULT_PAGES = [
-    { name: "トップページ",       guide: "最初に見える1〜2行のキャッチコピーと、伝えたいことを3つほど。「誰に」「何を」してあげられるかが伝わると強くなります。", ph: "例）地域のみなさまの暮らしを、40年支えてきました。\n・創業40年の実績\n・自社施工だから安心価格\n・見積り無料、当日対応可" },
-    { name: "会社概要",           guide: "会社名・所在地・代表者名・設立年・従業員数・事業内容など。パンフレットの丸写しでも構いません。", ph: "会社名：\n所在地：\n代表者：\n設立：\n事業内容：" },
-    { name: "サービス・事業内容", guide: "扱っているサービスを、ひとつずつ。料金や対応エリアが決まっていれば一緒に書いてください。", ph: "■ サービス名\n内容：\n料金：\n対応エリア：" },
-    { name: "お客様の声・実績",   guide: "実際にいただいた感想や、施工事例など。掲載の許可が取れているものだけをお書きください。", ph: "例）〇〇市 A様／「相談から工事まで丁寧に対応してもらえました」" },
-    { name: "お問い合わせ",       guide: "受付時間、定休日、フォームに入れたい項目など。", ph: "受付時間：平日 9:00〜18:00\n定休日：土日祝\nフォーム項目：お名前／メール／電話／ご相談内容" }
+    { name: "トップページ",       type: "text", guide: "最初に見える1〜2行のキャッチコピーと、伝えたいことを3つほど。「誰に」「何を」してあげられるかが伝わると強くなります。", ph: "例）地域のみなさまの暮らしを、40年支えてきました。\n・創業40年の実績\n・自社施工だから安心価格\n・見積り無料、当日対応可" },
+    { name: "会社概要",           type: "text", guide: "会社名・所在地・代表者名・設立年・従業員数・事業内容など。パンフレットの丸写しでも構いません。", ph: "会社名：\n所在地：\n代表者：\n設立：\n事業内容：" },
+    { name: "サービス・事業内容", type: "items", guide: "扱っているサービスを、ひとつずつ追加してください。料金が決まっていなければ「要相談」で構いません。", ph: "" },
+    { name: "お客様の声・実績",   type: "text", guide: "実際にいただいた感想や、施工事例など。掲載の許可が取れているものだけをお書きください。", ph: "例）〇〇市 A様／「相談から工事まで丁寧に対応してもらえました」" },
+    { name: "お問い合わせ",       type: "text", guide: "受付時間、定休日、フォームに入れたい項目など。", ph: "受付時間：平日 9:00〜18:00\n定休日：土日祝\nフォーム項目：お名前／メール／電話／ご相談内容" }
   ];
 
   var SUGGESTED_PAGES = [
-    { name: "採用情報",       guide: "求める人物像、仕事内容、待遇、先輩の声など。", ph: "募集職種：\n仕事内容：\n勤務時間：\n給与：" },
-    { name: "よくある質問",   guide: "お客様からよく聞かれることと、その答え。", ph: "Q. 見積りは無料ですか？\nA. " },
-    { name: "料金表",         guide: "メニューや価格。目安や「要相談」でも構いません。", ph: "" },
-    { name: "アクセス",       guide: "住所、最寄り駅、駐車場の有無、道順など。", ph: "" },
-    { name: "施工事例・実績", guide: "写真と一緒に載せたい事例。", ph: "" },
-    { name: "スタッフ紹介",   guide: "お名前、担当、ひとこと。", ph: "" },
-    { name: "ブログ・お知らせ", guide: "書きたい内容の方向性。", ph: "" },
-    { name: "プライバシーポリシー", guide: "定型文でよければ、こちらでご用意します。", ph: "" }
+    { name: "スタッフ紹介",   type: "people", guide: "お一人ずつ追加してください。写真は「素材・既存サイト」タブでアップロードし、ここにお名前を書いていただければ紐づけます。", ph: "" },
+    { name: "よくある質問",   type: "qa",     guide: "お客様からよく聞かれることを、1問ずつ追加してください。", ph: "" },
+    { name: "採用情報",       type: "text",   guide: "求める人物像、仕事内容、待遇、先輩の声など。", ph: "募集職種：\n仕事内容：\n勤務時間：\n給与：" },
+    { name: "料金表",         type: "items",  guide: "メニューと価格を1件ずつ。「要相談」でも構いません。", ph: "" },
+    { name: "施工事例・実績", type: "items",  guide: "事例を1件ずつ。写真は「素材・既存サイト」タブからどうぞ。", ph: "" },
+    { name: "アクセス",       type: "text",   guide: "住所、最寄り駅、駐車場の有無、道順など。", ph: "" },
+    { name: "ブログ・お知らせ", type: "text", guide: "書きたい内容の方向性。", ph: "" },
+    { name: "プライバシーポリシー", type: "text", guide: "定型文でよければ、こちらでご用意します。", ph: "" }
   ];
 
   /* ---- 案件ID ---- */
@@ -824,6 +897,18 @@
   }
 
   /* ---------- ページ（動的） ---------- */
+  function pageType(p) {
+    return PAGE_TYPES[p.type] ? p.type : "text";
+  }
+
+  function pageIsFilled(p) {
+    var t = pageType(p);
+    if (t === "text") return String(p.body || "").trim().length > 0;
+    return (p.items || []).some(function (it) {
+      return PAGE_TYPES[t].fields.some(function (f) { return String(it[f.key] || "").trim(); });
+    });
+  }
+
   function renderPages() {
     var wrap = document.getElementById("pageList");
     wrap.innerHTML = "";
@@ -848,37 +933,43 @@
         '</summary>' +
         '<div class="page-body">' +
           '<p class="guide"></p>' +
-          '<textarea class="tall"></textarea>' +
-          '<div class="counter"></div>' +
+          '<div class="fmt-bar"><span>このページの書き方</span><select aria-label="入力形式"></select></div>' +
+          '<div class="page-content"></div>' +
         '</div>';
 
       var nameEl = det.querySelector(".page-name");
       var guideEl = det.querySelector(".guide");
-      var taEl = det.querySelector("textarea");
       var stEl = det.querySelector(".status");
-      var cntEl = det.querySelector(".counter");
+      var selEl = det.querySelector(".fmt-bar select");
+      var contentEl = det.querySelector(".page-content");
 
       nameEl.value = p.name;
       guideEl.textContent = p.guide || "このページに載せたい内容を、思いつくままにどうぞ。";
       if (!p.guide) guideEl.style.display = "none";
-      taEl.placeholder = p.ph || "箇条書きやメモのままで大丈夫です。";
-      taEl.value = p.body || "";
+
+      Object.keys(PAGE_TYPES).forEach(function (k) {
+        var o = document.createElement("option");
+        o.value = k; o.textContent = PAGE_TYPES[k].label;
+        selEl.appendChild(o);
+      });
+      selEl.value = pageType(p);
 
       var mark = function () {
-        var ok = String(taEl.value).trim().length > 0;
+        var ok = pageIsFilled(p);
         stEl.textContent = ok ? "記入あり" : "未記入";
         stEl.classList.toggle("filled", ok);
-        cntEl.textContent = taEl.value.length + " 文字";
       };
-      mark();
 
-      // ページ名のクリックで開閉しないようにする
       nameEl.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); nameEl.focus(); });
       nameEl.addEventListener("keydown", function (e) { e.stopPropagation(); });
       nameEl.addEventListener("input", function () { p.name = nameEl.value; save(); });
 
-      taEl.addEventListener("input", function () {
-        p.body = taEl.value; mark(); save(); refresh();
+      selEl.addEventListener("click", function (e) { e.stopPropagation(); });
+      selEl.addEventListener("change", function () {
+        p.type = selEl.value;
+        if (p.type !== "text" && !Array.isArray(p.items)) p.items = [];
+        renderContent();
+        mark(); save(); refresh();
       });
 
       det.querySelector(".del-btn").addEventListener("click", function (e) {
@@ -889,12 +980,112 @@
         toast("ページを削除しました");
       });
 
+      function renderContent() {
+        contentEl.innerHTML = "";
+        var t = pageType(p);
+
+        if (t === "text") {
+          var ta = document.createElement("textarea");
+          ta.className = "tall";
+          ta.placeholder = p.ph || "箇条書きやメモのままで大丈夫です。";
+          ta.value = p.body || "";
+          var cnt = document.createElement("div");
+          cnt.className = "counter";
+          cnt.textContent = ta.value.length + " 文字";
+          ta.addEventListener("input", function () {
+            p.body = ta.value;
+            cnt.textContent = ta.value.length + " 文字";
+            mark(); save(); refresh();
+          });
+          contentEl.appendChild(ta);
+          contentEl.appendChild(cnt);
+          return;
+        }
+
+        var spec = PAGE_TYPES[t];
+        if (!Array.isArray(p.items)) p.items = [];
+        if (!p.items.length) {
+          var empty = document.createElement("p");
+          empty.className = "empty-note";
+          empty.textContent = "まだありません。下のボタンから追加してください。";
+          contentEl.appendChild(empty);
+        }
+
+        p.items.forEach(function (it, idx) {
+          var card = document.createElement("div");
+          card.className = "item-card";
+
+          var head = document.createElement("div");
+          head.className = "item-head";
+          head.innerHTML = '<span class="item-no"></span><span class="spacer"></span>' +
+                           '<button class="del-btn" type="button">削除</button>';
+          head.querySelector(".item-no").textContent = (idx + 1) + spec.unit;
+          head.querySelector(".del-btn").addEventListener("click", function () {
+            p.items.splice(idx, 1); renderContent(); mark(); save(); refresh();
+          });
+          card.appendChild(head);
+
+          var grid = document.createElement("div");
+          grid.className = "item-grid";
+          var shortFields = spec.fields.filter(function (f) { return !f.area; });
+          var row2 = null;
+          if (shortFields.length === 2) {
+            row2 = document.createElement("div");
+            row2.className = "item-row2";
+            grid.appendChild(row2);
+          }
+
+          spec.fields.forEach(function (f) {
+            var pair = document.createElement("label");
+            pair.className = "pair";
+            var lab = document.createElement("span");
+            lab.textContent = f.label;
+            var inp = f.area ? document.createElement("textarea") : document.createElement("input");
+            if (!f.area) inp.type = "text";
+            inp.placeholder = f.ph || "";
+            inp.value = it[f.key] || "";
+            inp.addEventListener("input", function () {
+              it[f.key] = inp.value; mark(); save(); refresh();
+            });
+            pair.appendChild(lab); pair.appendChild(inp);
+            (!f.area && row2 ? row2 : grid).appendChild(pair);
+          });
+          card.appendChild(grid);
+          contentEl.appendChild(card);
+        });
+
+        var add = document.createElement("button");
+        add.className = "add-btn"; add.type = "button";
+        add.textContent = spec.addLabel;
+        add.addEventListener("click", function () {
+          p.items.push({});
+          renderContent(); mark(); save(); refresh();
+          var inputs = contentEl.querySelectorAll(".item-card");
+          var lastCard = inputs[inputs.length - 1];
+          if (lastCard) {
+            lastCard.scrollIntoView({ behavior: "smooth", block: "center" });
+            var first = lastCard.querySelector("input, textarea");
+            if (first) first.focus();
+          }
+        });
+        contentEl.appendChild(add);
+      }
+
+      renderContent();
+      mark();
       wrap.appendChild(det);
     });
   }
 
   function addPage(page, opts) {
-    pages.push({ name: page.name, guide: page.guide || "", ph: page.ph || "", body: "" });
+    pages.push({
+      name: page.name,
+      type: page.type || "text",
+      guide: page.guide || "",
+      ph: page.ph || "",
+      body: "",
+      items: []
+    });
     renderPages(); renderSuggest(); save(); refresh();
     var blocks = document.querySelectorAll("#pageList .page-block");
     var last = blocks[blocks.length - 1];
@@ -909,18 +1100,18 @@
     var box = document.getElementById("pageSuggest");
     box.innerHTML = "";
     var used = pages.map(function (p) { return String(p.name).trim(); });
-    SUGGESTED_PAGES.forEach(function (s) {
+    SUGGESTED_PAGES.forEach(function (sp) {
       var b = document.createElement("button");
       b.className = "chip"; b.type = "button";
-      b.textContent = "＋ " + s.name;
-      if (used.indexOf(s.name) >= 0) { b.disabled = true; b.textContent = "✓ " + s.name; }
-      b.addEventListener("click", function () { addPage(s); toast("「" + s.name + "」を追加しました"); });
+      b.textContent = "＋ " + sp.name;
+      if (used.indexOf(sp.name) >= 0) { b.disabled = true; b.textContent = "✓ " + sp.name; }
+      b.addEventListener("click", function () { addPage(sp); toast("「" + sp.name + "」を追加しました"); });
       box.appendChild(b);
     });
   }
 
   document.getElementById("addPage").addEventListener("click", function () {
-    addPage({ name: "新しいページ", guide: "", ph: "" }, { focusName: true });
+    addPage({ name: "新しいページ", type: "text", guide: "", ph: "" }, { focusName: true });
   });
 
   /* ---------- やりたいこと（動的） ---------- */
@@ -1020,8 +1211,7 @@
 
     if (tab === "copy") {
       if (!pages.length) return 0;
-      var done = pages.filter(function (p) { return String(p.body || "").trim(); }).length;
-      return done / pages.length;
+      return pages.filter(pageIsFilled).length / pages.length;
     }
 
     var groups = {}, total = 0, filled = 0;
@@ -1092,7 +1282,19 @@
     // ページは【ページ名】区切りの1つのテキストにまとめる
     out.pagesText = pages.map(function (p) {
       var name = String(p.name || "無題のページ").trim();
-      var body = String(p.body || "").trim();
+      var t = pageType(p);
+      var body;
+      if (t === "text") {
+        body = String(p.body || "").trim();
+      } else {
+        var spec = PAGE_TYPES[t];
+        body = (p.items || [])
+          .filter(function (it) {
+            return spec.fields.some(function (f) { return String(it[f.key] || "").trim(); });
+          })
+          .map(function (it) { return spec.render(it); })
+          .join("\n\n");
+      }
       return "【" + name + "】\n" + (body || "（未記入）");
     }).join("\n\n");
 
@@ -1258,7 +1460,7 @@
     state = {};
     features = [];
     pages = DEFAULT_PAGES.map(function (p) {
-      return { name: p.name, guide: p.guide, ph: p.ph, body: "" };
+      return { name: p.name, type: p.type, guide: p.guide, ph: p.ph, body: "", items: [] };
     });
     document.querySelectorAll("[data-key]").forEach(function (el) {
       if (el.type === "checkbox" || el.type === "radio") el.checked = false; else el.value = "";
@@ -1283,7 +1485,7 @@
 
   /* ---------- 初期化 ---------- */
   pages = DEFAULT_PAGES.map(function (p) {
-    return { name: p.name, guide: p.guide, ph: p.ph, body: "" };
+    return { name: p.name, type: p.type, guide: p.guide, ph: p.ph, body: "", items: [] };
   });
   var restored = restore();
   ["contact", "purpose", "domainStatus", "reuseText"].forEach(syncProCon);
