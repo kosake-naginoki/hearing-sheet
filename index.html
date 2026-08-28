@@ -387,6 +387,100 @@
   .mini.pop   { --mini-bg:#FFFFFF; --mini-ink:#2A2320; --mini-accent:#E2643C; --mini-hero:#FFE2D2; --mini-card:#FFEFE6; --mini-r:10px; --mini-pad:9px; --mini-t1:9px; --mini-heroflex:1.7; }
   .mini.pop .m-cards { grid-template-columns: repeat(2, 1fr); }
 
+  /* ---------- 既存サイトの取り込み ---------- */
+  function setImportMsg(cls, html) {
+    var el = document.getElementById("importMsg");
+    el.className = "import-msg " + cls;
+    el.innerHTML = html;
+  }
+
+  function applyImport(data) {
+    var filled = [];
+
+    // 固定項目は「空欄のときだけ」埋める（書いてもらった内容を消さない）
+    var map = {
+      companyName: "会社名", pubTel: "電話番号", pubEmail: "メールアドレス",
+      address: "住所", pubHours: "受付時間"
+    };
+    Object.keys(map).forEach(function (k) {
+      var v = data.fields[k];
+      if (!v || String(state[k] || "").trim()) return;
+      state[k] = String(v);
+      var el = document.querySelector('[data-key="' + k + '"]');
+      if (el) el.value = state[k];
+      filled.push(map[k]);
+    });
+
+    // 取得元を記録（プロンプトに注記が入る）
+    state.importedFrom = data.url;
+    if (!String(state.currentUrl || "").trim()) {
+      state.currentUrl = data.url;
+      var cu = document.querySelector('[data-key="currentUrl"]');
+      if (cu) cu.value = data.url;
+    }
+
+    // ページ：本文が空のページにだけ流し込む。無いページ名は追加する
+    var addedPages = 0, filledPages = 0;
+    (data.pages || []).forEach(function (ip) {
+      var name = String(ip.name || "").trim();
+      var body = String(ip.body || "").trim();
+      if (!name || !body) return;
+
+      var pg = pages.filter(function (p) { return String(p.name).trim() === name; })[0];
+      if (!pg) {
+        pages.push({ name: name, type: "text", guide: "", ph: "", body: body, items: [] });
+        addedPages++;
+        return;
+      }
+      if (pageType(pg) === "text" && !String(pg.body || "").trim()) {
+        pg.body = body; filledPages++;
+      }
+    });
+
+    renderPages(); renderSuggest(); save(); refresh();
+
+    var parts = [];
+    if (filled.length)  parts.push(filled.join("・") + " を取り込みました");
+    if (filledPages)    parts.push(filledPages + " ページに文章を入れました");
+    if (addedPages)     parts.push(addedPages + " ページを追加しました");
+    if (!parts.length)  parts.push("すでにご記入済みだったため、上書きはしていません");
+
+    setImportMsg("ok",
+      "✓ " + parts.join("。") + "。<div class=\"import-warn\">" +
+      "<b>読み込んだ内容が、今も正しいかご確認ください。</b><br>" +
+      "電話番号・住所・受付時間・料金は変わっていることがあります。" +
+      "古いままだと、そのまま新しいホームページに載ってしまいます。<br>" +
+      "文章も、必要なところだけ残して、あとは消していただいて構いません。</div>");
+  }
+
+  var importing = false;
+  document.getElementById("btnImport").addEventListener("click", function () {
+    if (importing) return;
+    var url = document.getElementById("importUrl").value.trim();
+    if (!url) { setImportMsg("ng", "URLを入れてください。"); return; }
+    if (!/^https?:\/\//i.test(url)) {
+      setImportMsg("ng", "https:// から始まるURLを入れてください。");
+      return;
+    }
+    if (!GAS_URL) { setImportMsg("ng", "この画面では読み込みをお試しいただけません。"); return; }
+
+    importing = true;
+    document.getElementById("btnImport").disabled = true;
+    setImportMsg("busy", "読み込んでいます… ページ数によっては30秒ほどかかります。");
+
+    post({ type: "import", projectId: projectId, url: url })
+      .then(function (res) { applyImport(res.imported); })
+      .catch(function (err) {
+        setImportMsg("ng",
+          "読み込めませんでした。" + escapeHtml(err.message || "") + "<br>" +
+          "お手数ですが、下の欄に直接ご記入ください。空欄のままでも構いません。");
+      })
+      .then(function () {
+        importing = false;
+        document.getElementById("btnImport").disabled = false;
+      });
+  });
+
   /* ---------- 「まずはこれだけ」チェックリスト ---------- */
   .starter { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-wash), var(--shadow); }
   .starter h3 { color: var(--accent); }
@@ -425,6 +519,28 @@
     border-color: var(--warn); background: var(--warn-wash);
   }
   .avoid .choice input { accent-color: var(--warn); }
+  /* ---------- 既存サイトの取り込み ---------- */
+  .import-card { border-color: var(--good); box-shadow: 0 0 0 3px var(--good-wash), var(--shadow); }
+  .import-card h3 { color: var(--good); }
+  .import-row { display: flex; gap: 9px; align-items: stretch; flex-wrap: wrap; }
+  .import-row input { flex: 1; min-width: 200px; }
+  .btn-import {
+    flex: none; font-family: var(--sans); font-size: 14px; font-weight: 600;
+    padding: 0 20px; border-radius: 8px; cursor: pointer; white-space: nowrap;
+    background: var(--good); color: #fff; border: none;
+  }
+  .btn-import:hover { opacity: .88; }
+  .btn-import:disabled { opacity: .5; cursor: default; }
+  .btn-import:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .import-msg { font-size: 13px; line-height: 1.75; margin-top: 12px; }
+  .import-msg.ok  { color: var(--good); }
+  .import-msg.ng  { color: var(--danger); }
+  .import-msg.busy{ color: var(--ink-muted); }
+  .import-warn {
+    margin-top: 12px; background: var(--warn-wash); border-radius: 9px; padding: 11px 14px;
+    font-size: 12.5px; line-height: 1.7; color: var(--warn);
+    border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
+  }
 </style>
 </head>
 <body>
@@ -459,6 +575,17 @@
         <span class="eyebrow">Step 01</span>
         <h2>基本情報</h2>
         <p>まずは御社のことと、ホームページで叶えたいことを教えてください。空欄のままでも先に進めます。</p>
+      </div>
+
+      <div class="card import-card">
+        <h3>今のホームページがある方へ</h3>
+        <p class="hint">URLを入れて読み込むと、<b>会社名・電話番号・住所・ページ構成・文章</b>を自動で取り込みます。<br>
+        ゼロから書かずに、<b>直すところだけ直せば済みます</b>。取り込んだ内容はすべて編集できます。</p>
+        <div class="import-row">
+          <input type="url" id="importUrl" placeholder="https://example.com" aria-label="今のホームページのURL">
+          <button class="btn-import" type="button" id="btnImport">読み込む</button>
+        </div>
+        <div class="import-msg" id="importMsg"></div>
       </div>
 
       <div class="card starter">
