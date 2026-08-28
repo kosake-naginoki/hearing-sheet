@@ -254,6 +254,54 @@
     .overall .bar { width: 84px; }
     .card { padding: 18px 16px; }
   }
+
+  /* ---------- 動的リスト（ページ・機能） ---------- */
+  .add-btn {
+    width: 100%; padding: 13px; border-radius: 10px; cursor: pointer;
+    border: 1.5px dashed var(--line); background: var(--paper);
+    font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--ink-muted);
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-wash); }
+  .add-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+  .chip {
+    border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
+    padding: 5px 13px; font-size: 12.5px; cursor: pointer; color: var(--ink-muted);
+    font-family: var(--sans); transition: border-color .15s, color .15s;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip:disabled { opacity: .4; cursor: default; }
+  .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .page-name {
+    flex: 1; min-width: 0; font-family: var(--sans); font-size: 14.5px; font-weight: 600;
+    color: var(--ink); background: none; border: 1px solid transparent; border-radius: 6px;
+    padding: 3px 7px; margin-right: auto;
+  }
+  .page-name:hover { border-color: var(--line); }
+  .page-name:focus { outline: none; border-color: var(--accent); background: var(--paper); box-shadow: 0 0 0 3px var(--accent-wash); }
+
+  .row-tools { display: flex; align-items: center; gap: 4px; flex: none; }
+  .del-btn {
+    border: none; background: none; cursor: pointer; color: var(--ink-faint);
+    font-size: 12px; font-family: var(--sans); padding: 4px 8px; border-radius: 6px;
+  }
+  .del-btn:hover { background: var(--danger-wash); color: var(--danger); }
+  .del-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .feature-row {
+    display: grid; grid-template-columns: minmax(140px, 1fr) minmax(180px, 1.6fr) auto;
+    gap: 9px; align-items: start; margin-bottom: 9px;
+  }
+  .feature-row:last-of-type { margin-bottom: 0; }
+  @media (max-width: 620px) { .feature-row { grid-template-columns: 1fr; } }
+
+  .empty-note {
+    font-size: 12.5px; color: var(--ink-faint); text-align: center;
+    padding: 18px 10px; border: 1px dashed var(--line-soft); border-radius: 10px; margin-bottom: 12px;
+  }
 </style>
 </head>
 <body>
@@ -298,8 +346,8 @@
           <div class="field"><label>ご担当者名</label><input type="text" data-key="personName" placeholder="山田 太郎"></div>
           <div class="field"><label>メールアドレス</label><input type="email" data-key="email" placeholder="info@example.com" autocomplete="email"></div>
           <div class="field"><label>お電話番号 <span class="opt-tag">任意</span></label><input type="tel" data-key="tel" placeholder="000-0000-0000"></div>
-          <div class="field"><label>現在のホームページ <span class="opt-tag">任意</span></label><input type="url" data-key="currentUrl" placeholder="https://example.com"></div>
           <div class="field"><label>事業の内容</label><input type="text" data-key="business" placeholder="例）建設業／飲食店／福祉サービス"></div>
+          <div class="field"><label>所在地 <span class="opt-tag">任意</span></label><input type="text" data-key="address" placeholder="〇〇県〇〇市…"></div>
         </div>
       </div>
 
@@ -336,18 +384,101 @@
               <option value="">選んでください</option>
               <option>急ぎではない</option><option>3か月以内</option>
               <option>2か月以内</option><option>1か月以内</option>
-              <option>希望日あり（右に記入）</option>
+              <option>希望日あり（下に記入）</option>
             </select>
           </div>
         </div>
         <div class="field"><label>時期についての補足 <span class="opt-tag">任意</span></label><input type="text" data-key="deadlineNote" placeholder="例）10月の展示会に間に合わせたい"></div>
       </div>
+
+      <div class="card">
+        <h3>ドメイン・サーバーの現状</h3>
+        <p class="hint">「わからない」で構いません。こちらで調べてご案内します。公開の直前に慌てないための確認です。</p>
+        <div class="field">
+          <label>ホームページの住所（ドメイン）</label>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="domainStatus" data-key="domainStatus" value="独自ドメインを持っている"><span class="choice-body"><b>すでに持っている</b><span>example.co.jp のような、御社専用の住所</span></span></label>
+            <label class="choice"><input type="radio" name="domainStatus" data-key="domainStatus" value="これから取得したい"><span class="choice-body"><b>これから取りたい</b><span>希望があれば下に書いてください</span></span></label>
+            <label class="choice"><input type="radio" name="domainStatus" data-key="domainStatus" value="わからない・任せたい"><span class="choice-body"><b>わからない／お任せしたい</b><span>こちらで確認してご提案します</span></span></label>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>ドメイン名 <span class="opt-tag">任意</span></label><input type="text" data-key="domainName" placeholder="example.co.jp"></div>
+          <div class="field"><label>契約先・管理会社 <span class="opt-tag">任意</span></label><input type="text" data-key="domainAdmin" placeholder="例）お名前.com／前の制作会社"></div>
+        </div>
+        <div class="field">
+          <label>サーバー（ホームページを置く場所）</label>
+          <select data-key="serverStatus">
+            <option value="">選んでください</option>
+            <option>契約済み</option>
+            <option>これから契約したい</option>
+            <option>わからない・任せたい</option>
+          </select>
+        </div>
+        <div class="field"><label>サーバー・メールについての補足 <span class="opt-tag">任意</span></label><input type="text" data-key="serverNote" placeholder="例）会社のメールも同じドメインで使っている"></div>
+      </div>
     </section>
 
-    <!-- ===== 2. デザイン・機能 ===== -->
-    <section class="panel" data-tab="design" role="tabpanel" aria-label="デザイン・機能">
+    <!-- ===== 2. 事業のこと ===== -->
+    <section class="panel" data-tab="business" role="tabpanel" aria-label="事業のこと">
       <div class="panel-head">
         <span class="eyebrow">Step 02</span>
+        <h2>事業のこと</h2>
+        <p>ここが、伝わるホームページになるかどうかの分かれ目です。うまくまとめようとせず、普段お客様に話していることをそのまま書いてください。</p>
+      </div>
+
+      <div class="card">
+        <h3>どんなお客様に届けたいですか</h3>
+        <p class="hint">「みんな」ではなく、いちばん来てほしい人を思い浮かべてください。</p>
+        <div class="field">
+          <label>来てほしいお客様</label>
+          <textarea data-key="target" placeholder="例）自宅の水回りが古くなって困っている、60代のご夫婦。&#10;例）はじめて注文住宅を建てる、小さいお子さんのいるご家庭。"></textarea>
+        </div>
+        <div class="field">
+          <label>対応エリア・商圏 <span class="opt-tag">任意</span></label>
+          <input type="text" data-key="area" placeholder="例）〇〇市とその近隣／全国対応">
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>他社と違うところ・自慢したいこと</h3>
+        <p class="hint">キャッチコピーはここから作ります。小さなことで構いません。</p>
+        <div class="field">
+          <label>強み・こだわり</label>
+          <textarea data-key="strength" placeholder="例）見積りが早い（当日中に出せる）&#10;例）職人が全員自社の社員&#10;例）女性スタッフが対応するので相談しやすい"></textarea>
+        </div>
+        <div class="field">
+          <label>気になっている同業他社 <span class="opt-tag">任意</span></label>
+          <textarea data-key="competitor" placeholder="会社名でもURLでも構いません。「ここのサイトはいいと思う」「ここには負けたくない」など。"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>お客様からよく聞かれること</h3>
+        <p class="hint">そのまま「よくある質問」ページの原稿になります。3つくらいあると助かります。</p>
+        <div class="field">
+          <label>よく聞かれる質問 <span class="opt-tag">任意</span></label>
+          <textarea data-key="faq" placeholder="例）見積りは無料ですか？&#10;例）土日も対応してもらえますか？&#10;例）どのくらいの期間がかかりますか？"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>今の困りごとと、目指すところ</h3>
+        <div class="field">
+          <label>今、集客や広報で困っていること <span class="opt-tag">任意</span></label>
+          <textarea data-key="trouble" placeholder="例）チラシの反応が落ちてきた／若いお客様が来ない／問い合わせの電話対応に手が取られる"></textarea>
+        </div>
+        <div class="field">
+          <label>どうなったら「作ってよかった」と思えますか <span class="opt-tag">任意</span></label>
+          <textarea data-key="success" placeholder="例）月に2〜3件、ホームページから問い合わせが来る&#10;例）取引先に「しっかりした会社ですね」と言われる"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 3. デザイン・機能 ===== -->
+    <section class="panel" data-tab="design" role="tabpanel" aria-label="デザイン・機能">
+      <div class="panel-head">
+        <span class="eyebrow">Step 03</span>
         <h2>デザイン・機能</h2>
         <p>「こんな雰囲気がいい」「これができたら嬉しい」を選んでいただくだけで大丈夫です。専門用語には補足を付けています。</p>
       </div>
@@ -405,76 +536,72 @@
           <label class="choice"><input type="checkbox" data-key="fn_map" value="地図を載せたい"><span class="choice-body"><b>地図を載せたい</b><span>Googleマップを埋め込みます</span></span></label>
           <label class="choice"><input type="checkbox" data-key="fn_sns" value="SNSと連携したい"><span class="choice-body"><b>SNSと連携したい</b><span>InstagramやXの投稿を表示します</span></span></label>
           <label class="choice"><input type="checkbox" data-key="fn_blog" value="ブログを書きたい"><span class="choice-body"><b>ブログを書きたい</b><span>記事を積み重ねて検索に強くします</span></span></label>
+          <label class="choice"><input type="checkbox" data-key="fn_reserve" value="予約を受け付けたい"><span class="choice-body"><b>予約を受け付けたい</b><span>日時を選んで予約できるようにします</span></span></label>
+          <label class="choice"><input type="checkbox" data-key="fn_multilang" value="多言語対応したい"><span class="choice-body"><b>多言語に対応したい</b><span>英語などの表示を用意します</span></span></label>
         </div>
+      </div>
+
+      <div class="card">
+        <h3>そのほかにやりたいこと</h3>
+        <p class="hint">上にないものは、ここに自由に足してください。「できるかどうか」はこちらで判断します。</p>
+        <div id="featureList"></div>
+        <button class="add-btn" type="button" id="addFeature">＋ やりたいことを追加</button>
       </div>
     </section>
 
-    <!-- ===== 3. ページ別原稿 ===== -->
-    <section class="panel" data-tab="copy" role="tabpanel" aria-label="ページ別原稿">
-      <div class="panel-head">
-        <span class="eyebrow">Step 03</span>
-        <h2>ページ別の原稿</h2>
-        <p>文章は完成していなくて構いません。箇条書きやメモのままで大丈夫です。こちらで整えます。</p>
-      </div>
-
-      <details class="page-block" open>
-        <summary><svg class="chev" width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M2 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="pname">トップページ</span><span class="status" data-status-for="copy_top">未記入</span></summary>
-        <div class="page-body">
-          <p class="guide">最初に見える1〜2行のキャッチコピーと、伝えたいことを3つほど。「誰に」「何を」してあげられるかが伝わると強くなります。</p>
-          <textarea class="tall" data-key="copy_top" data-counter placeholder="例）地域のみなさまの暮らしを、40年支えてきました。&#10;・創業40年の実績&#10;・自社施工だから安心価格&#10;・見積り無料、当日対応可"></textarea>
-          <div class="counter" data-count-for="copy_top">0 文字</div>
-        </div>
-      </details>
-
-      <details class="page-block">
-        <summary><svg class="chev" width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M2 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="pname">会社概要</span><span class="status" data-status-for="copy_about">未記入</span></summary>
-        <div class="page-body">
-          <p class="guide">会社名・所在地・代表者名・設立年・従業員数・事業内容など。パンフレットの丸写しでも構いません。</p>
-          <textarea class="tall" data-key="copy_about" data-counter placeholder="会社名：&#10;所在地：&#10;代表者：&#10;設立：&#10;事業内容："></textarea>
-          <div class="counter" data-count-for="copy_about">0 文字</div>
-        </div>
-      </details>
-
-      <details class="page-block">
-        <summary><svg class="chev" width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M2 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="pname">サービス・事業内容</span><span class="status" data-status-for="copy_service">未記入</span></summary>
-        <div class="page-body">
-          <p class="guide">扱っているサービスを、ひとつずつ。料金や対応エリアが決まっていれば一緒に書いてください。</p>
-          <textarea class="tall" data-key="copy_service" data-counter placeholder="■ サービス名&#10;内容：&#10;料金：&#10;対応エリア："></textarea>
-          <div class="counter" data-count-for="copy_service">0 文字</div>
-        </div>
-      </details>
-
-      <details class="page-block">
-        <summary><svg class="chev" width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M2 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="pname">お客様の声・実績</span><span class="status" data-status-for="copy_voice">未記入</span></summary>
-        <div class="page-body">
-          <p class="guide">実際にいただいた感想や、施工事例など。掲載の許可が取れているものだけをお書きください。</p>
-          <textarea data-key="copy_voice" data-counter placeholder="例）〇〇市 A様／「相談から工事まで丁寧に対応してもらえました」"></textarea>
-          <div class="counter" data-count-for="copy_voice">0 文字</div>
-        </div>
-      </details>
-
-      <details class="page-block">
-        <summary><svg class="chev" width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M2 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="pname">お問い合わせページ</span><span class="status" data-status-for="copy_contact">未記入</span></summary>
-        <div class="page-body">
-          <p class="guide">受付時間、定休日、フォームに入れたい項目など。</p>
-          <textarea data-key="copy_contact" data-counter placeholder="受付時間：平日 9:00〜18:00&#10;定休日：土日祝&#10;フォーム項目：お名前／メール／電話／ご相談内容"></textarea>
-          <div class="counter" data-count-for="copy_contact">0 文字</div>
-        </div>
-      </details>
-
-      <div class="card" style="margin-top:16px">
-        <h3>そのほかに必要なページ <span class="opt-tag">任意</span></h3>
-        <p class="hint">上記以外に載せたいページがあれば教えてください。</p>
-        <textarea data-key="copy_other" placeholder="例）採用情報／よくある質問／料金表"></textarea>
-      </div>
-    </section>
-
-    <!-- ===== 4. 写真・ファイル ===== -->
-    <section class="panel" data-tab="files" role="tabpanel" aria-label="写真・ファイル">
+    <!-- ===== 4. ページと原稿 ===== -->
+    <section class="panel" data-tab="copy" role="tabpanel" aria-label="ページと原稿">
       <div class="panel-head">
         <span class="eyebrow">Step 04</span>
-        <h2>写真・ファイル</h2>
-        <p>ロゴや店内の写真、参考にしたいチラシなどをお預かりします。スマホで撮った写真でも構いません。</p>
+        <h2>ページと原稿</h2>
+        <p>必要なページを足したり減らしたりできます。文章は完成していなくて構いません。箇条書きやメモのままで大丈夫です。</p>
+      </div>
+
+      <div id="pageList"></div>
+
+      <button class="add-btn" type="button" id="addPage">＋ ページを追加</button>
+
+      <div class="card" style="margin-top:16px">
+        <h3>よく作られるページ</h3>
+        <p class="hint">押すとページが追加されます。</p>
+        <div class="chips" id="pageSuggest"></div>
+      </div>
+    </section>
+
+    <!-- ===== 5. 素材・既存サイト ===== -->
+    <section class="panel" data-tab="assets" role="tabpanel" aria-label="素材・既存サイト">
+      <div class="panel-head">
+        <span class="eyebrow">Step 05</span>
+        <h2>素材・既存サイト</h2>
+        <p>すでにある文章や写真は、そのまま活かせます。ゼロから書き起こす必要はありません。</p>
+      </div>
+
+      <div class="card">
+        <h3>今お使いのホームページ</h3>
+        <p class="hint">文章や会社情報を引き継げるかを確認します。</p>
+        <div class="field">
+          <label>ホームページのURL <span class="opt-tag">任意</span></label>
+          <input type="url" data-key="currentUrl" placeholder="https://example.com">
+        </div>
+        <div class="field">
+          <label>今のサイトの文章の扱い</label>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="reuseText" data-key="reuseText" value="そのまま使ってよい"><span class="choice-body"><b>そのまま使ってよい</b><span>読みやすく整えたうえで引き継ぎます</span></span></label>
+            <label class="choice"><input type="radio" name="reuseText" data-key="reuseText" value="内容は使うが書き直したい"><span class="choice-body"><b>内容は使うが、書き直したい</b><span>情報は活かしつつ、表現を新しくします</span></span></label>
+            <label class="choice"><input type="radio" name="reuseText" data-key="reuseText" value="使わず新しく作りたい"><span class="choice-body"><b>使わず、新しく作りたい</b><span>まっさらな状態から考えます</span></span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label>特に引き継ぎたいページ・気になる点 <span class="opt-tag">任意</span></label>
+          <textarea data-key="reusePages" placeholder="例）会社概要と施工事例はそのまま使いたい／トップの文章は古いので変えたい"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>会社案内・パンフレット・原稿ファイル</h3>
+        <p class="hint">文章や会社情報が載っているものがあれば、そのままお預けください。<br>PDF・Word・Excel・写真、スマホで撮ったパンフレットの写真でも構いません。</p>
+        <div class="drop" data-drop="doc" tabindex="0" role="button"><b>ここにドラッグ、またはクリックして選択</b><span>PDF / Word / Excel / 画像</span></div>
+        <ul class="files" data-list="doc"></ul>
       </div>
 
       <div class="card">
@@ -490,23 +617,16 @@
         <div class="drop" data-drop="photo" tabindex="0" role="button"><b>ここにドラッグ、またはクリックして選択</b><span>JPG / PNG ・ 何枚でも（自動で軽くしてから送ります）</span></div>
         <ul class="files" data-list="photo"></ul>
         <div class="field" style="margin-top:16px">
-          <label>写真についての補足 <span class="opt-tag">任意</span></label>
-          <textarea data-key="photoNote" placeholder="例）3枚目はトップページの一番上に使ってほしい／顔が写っている人は掲載許可済みです"></textarea>
+          <label>写真についての補足・掲載NG <span class="opt-tag">任意</span></label>
+          <textarea data-key="photoNote" placeholder="例）3枚目はトップページの一番上に使ってほしい／顔が写っている人は掲載許可済みです／価格は載せないでほしい"></textarea>
         </div>
-      </div>
-
-      <div class="card">
-        <h3>そのほかの資料</h3>
-        <p class="hint">会社パンフレット、料金表、以前のホームページの資料など。</p>
-        <div class="drop" data-drop="doc" tabindex="0" role="button"><b>ここにドラッグ、またはクリックして選択</b><span>PDF / Word / Excel / 画像</span></div>
-        <ul class="files" data-list="doc"></ul>
       </div>
     </section>
 
-    <!-- ===== 5. 確認・送信 ===== -->
+    <!-- ===== 6. 確認・送信 ===== -->
     <section class="panel" data-tab="submit" role="tabpanel" aria-label="確認・送信">
       <div class="panel-head">
-        <span class="eyebrow">Step 05</span>
+        <span class="eyebrow">Step 06</span>
         <h2>内容の確認と送信</h2>
         <p>すべて埋まっていなくても送信できます。送信後も、同じURLから追記して再送信していただけます。</p>
       </div>
@@ -535,7 +655,6 @@
   </main>
 </div>
 
-<!-- 完了画面 -->
 <div class="done-screen" id="doneScreen">
   <div class="mark" aria-hidden="true">✓</div>
   <h2>送信が完了しました</h2>
@@ -543,7 +662,6 @@
   <button class="btn btn-ghost" id="btnBack" type="button">入力画面に戻る</button>
 </div>
 
-<!-- 送信中オーバーレイ -->
 <div class="overlay" id="overlay" role="status" aria-live="polite">
   <div class="box">
     <h3 id="ovTitle">送信しています</h3>
@@ -560,25 +678,44 @@
   "use strict";
 
   /* =========================================================
-     設定：GAS の Web アプリ URL をここに貼り付けてください
-     （Code.gs をデプロイして得られる https://script.google.com/macros/s/…/exec）
+     設定：GAS の Web アプリ URL
      ========================================================= */
   var GAS_URL = "https://script.google.com/macros/s/AKfycbxmgGaFrCMdE_MB4pIQWULZKgpNewloCLBnAZf78KzmxH-vzesB2QSI9Zs5q9BxoaEU/exec";
 
-  /* 画像の自動圧縮設定（スマホ写真をそのまま送るとGASの上限に当たるため） */
-  var IMG_MAX_EDGE = 1600;   // 長辺の最大px
+  var IMG_MAX_EDGE = 1600;   // 画像の長辺の最大px
   var IMG_QUALITY  = 0.82;   // JPEG品質
   var MAX_FILE_MB  = 20;     // 圧縮前の受付上限
 
   var TABS = [
-    { id: "basic",  label: "基本情報" },
-    { id: "design", label: "デザイン・機能" },
-    { id: "copy",   label: "ページ別原稿" },
-    { id: "files",  label: "写真・ファイル" },
-    { id: "submit", label: "確認・送信" }
+    { id: "basic",    label: "基本情報" },
+    { id: "business", label: "事業のこと" },
+    { id: "design",   label: "デザイン・機能" },
+    { id: "copy",     label: "ページと原稿" },
+    { id: "assets",   label: "素材・既存サイト" },
+    { id: "submit",   label: "確認・送信" }
   ];
 
-  /* ---- 案件ID（?id=xxxx）。無ければ端末ごとの仮IDを発行して使い回す ---- */
+  /* 初期のページ構成。クライアントが自由に足し引きできる */
+  var DEFAULT_PAGES = [
+    { name: "トップページ",       guide: "最初に見える1〜2行のキャッチコピーと、伝えたいことを3つほど。「誰に」「何を」してあげられるかが伝わると強くなります。", ph: "例）地域のみなさまの暮らしを、40年支えてきました。\n・創業40年の実績\n・自社施工だから安心価格\n・見積り無料、当日対応可" },
+    { name: "会社概要",           guide: "会社名・所在地・代表者名・設立年・従業員数・事業内容など。パンフレットの丸写しでも構いません。", ph: "会社名：\n所在地：\n代表者：\n設立：\n事業内容：" },
+    { name: "サービス・事業内容", guide: "扱っているサービスを、ひとつずつ。料金や対応エリアが決まっていれば一緒に書いてください。", ph: "■ サービス名\n内容：\n料金：\n対応エリア：" },
+    { name: "お客様の声・実績",   guide: "実際にいただいた感想や、施工事例など。掲載の許可が取れているものだけをお書きください。", ph: "例）〇〇市 A様／「相談から工事まで丁寧に対応してもらえました」" },
+    { name: "お問い合わせ",       guide: "受付時間、定休日、フォームに入れたい項目など。", ph: "受付時間：平日 9:00〜18:00\n定休日：土日祝\nフォーム項目：お名前／メール／電話／ご相談内容" }
+  ];
+
+  var SUGGESTED_PAGES = [
+    { name: "採用情報",       guide: "求める人物像、仕事内容、待遇、先輩の声など。", ph: "募集職種：\n仕事内容：\n勤務時間：\n給与：" },
+    { name: "よくある質問",   guide: "お客様からよく聞かれることと、その答え。", ph: "Q. 見積りは無料ですか？\nA. " },
+    { name: "料金表",         guide: "メニューや価格。目安や「要相談」でも構いません。", ph: "" },
+    { name: "アクセス",       guide: "住所、最寄り駅、駐車場の有無、道順など。", ph: "" },
+    { name: "施工事例・実績", guide: "写真と一緒に載せたい事例。", ph: "" },
+    { name: "スタッフ紹介",   guide: "お名前、担当、ひとこと。", ph: "" },
+    { name: "ブログ・お知らせ", guide: "書きたい内容の方向性。", ph: "" },
+    { name: "プライバシーポリシー", guide: "定型文でよければ、こちらでご用意します。", ph: "" }
+  ];
+
+  /* ---- 案件ID ---- */
   var params = new URLSearchParams(location.search);
   var projectId = (params.get("id") || "").trim();
   if (!projectId) {
@@ -595,6 +732,8 @@
   var rail = document.querySelector(".rail");
   var panels = Array.prototype.slice.call(document.querySelectorAll(".panel"));
   var state = {};
+  var pages = [];
+  var features = [];
   var files = { logo: [], photo: [], doc: [] };
 
   /* ---------- タブ ---------- */
@@ -631,7 +770,11 @@
     document.getElementById("saveText").textContent = "保存しています…";
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          fields: state, pages: pages, features: features
+        }));
+      } catch (e) {}
       el.classList.remove("saving");
       var d = new Date();
       document.getElementById("saveText").textContent =
@@ -643,8 +786,15 @@
   function restore() {
     var raw = null;
     try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
-    if (!raw) return;
-    try { state = JSON.parse(raw) || {}; } catch (e) { state = {}; return; }
+    if (!raw) return false;
+    var data;
+    try { data = JSON.parse(raw); } catch (e) { return false; }
+    if (!data) return false;
+
+    state = data.fields || {};
+    if (Array.isArray(data.pages) && data.pages.length) pages = data.pages;
+    if (Array.isArray(data.features)) features = data.features;
+
     document.querySelectorAll("[data-key]").forEach(function (el) {
       var v = state[el.dataset.key];
       if (v === undefined || v === null) return;
@@ -652,10 +802,10 @@
       else if (el.type === "radio") el.checked = (el.value === v);
       else el.value = v;
     });
-    toast("前回の入力内容を復元しました");
+    return true;
   }
 
-  /* ---------- 入力 ---------- */
+  /* ---------- 固定項目の入力 ---------- */
   document.querySelectorAll("[data-key]").forEach(function (el) {
     var ev = (el.tagName === "SELECT" || el.type === "radio" || el.type === "checkbox") ? "change" : "input";
     el.addEventListener(ev, function () {
@@ -673,18 +823,142 @@
     });
   }
 
-  /* ---------- 文字数カウンタ ---------- */
-  document.querySelectorAll("[data-counter]").forEach(function (ta) {
-    var out = document.querySelector('[data-count-for="' + ta.dataset.key + '"]');
-    ta.addEventListener("input", function () {
-      out.textContent = ta.value.length + " 文字";
-      var st = document.querySelector('[data-status-for="' + ta.dataset.key + '"]');
-      if (st) {
-        var ok = ta.value.trim().length > 0;
-        st.textContent = ok ? "記入あり" : "未記入";
-        st.classList.toggle("filled", ok);
-      }
+  /* ---------- ページ（動的） ---------- */
+  function renderPages() {
+    var wrap = document.getElementById("pageList");
+    wrap.innerHTML = "";
+
+    if (!pages.length) {
+      var note = document.createElement("p");
+      note.className = "empty-note";
+      note.textContent = "ページがありません。下のボタンから追加してください。";
+      wrap.appendChild(note);
+    }
+
+    pages.forEach(function (p, i) {
+      var det = document.createElement("details");
+      det.className = "page-block";
+      if (i === 0) det.open = true;
+      det.innerHTML =
+        '<summary>' +
+          '<svg class="chev" width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M2 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          '<input class="page-name" type="text" aria-label="ページ名">' +
+          '<span class="row-tools"><span class="status"></span>' +
+          '<button class="del-btn" type="button">削除</button></span>' +
+        '</summary>' +
+        '<div class="page-body">' +
+          '<p class="guide"></p>' +
+          '<textarea class="tall"></textarea>' +
+          '<div class="counter"></div>' +
+        '</div>';
+
+      var nameEl = det.querySelector(".page-name");
+      var guideEl = det.querySelector(".guide");
+      var taEl = det.querySelector("textarea");
+      var stEl = det.querySelector(".status");
+      var cntEl = det.querySelector(".counter");
+
+      nameEl.value = p.name;
+      guideEl.textContent = p.guide || "このページに載せたい内容を、思いつくままにどうぞ。";
+      if (!p.guide) guideEl.style.display = "none";
+      taEl.placeholder = p.ph || "箇条書きやメモのままで大丈夫です。";
+      taEl.value = p.body || "";
+
+      var mark = function () {
+        var ok = String(taEl.value).trim().length > 0;
+        stEl.textContent = ok ? "記入あり" : "未記入";
+        stEl.classList.toggle("filled", ok);
+        cntEl.textContent = taEl.value.length + " 文字";
+      };
+      mark();
+
+      // ページ名のクリックで開閉しないようにする
+      nameEl.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); nameEl.focus(); });
+      nameEl.addEventListener("keydown", function (e) { e.stopPropagation(); });
+      nameEl.addEventListener("input", function () { p.name = nameEl.value; save(); });
+
+      taEl.addEventListener("input", function () {
+        p.body = taEl.value; mark(); save(); refresh();
+      });
+
+      det.querySelector(".del-btn").addEventListener("click", function (e) {
+        e.preventDefault(); e.stopPropagation();
+        if (!window.confirm("「" + (p.name || "無題のページ") + "」を削除します。よろしいですか？")) return;
+        pages.splice(i, 1);
+        renderPages(); renderSuggest(); save(); refresh();
+        toast("ページを削除しました");
+      });
+
+      wrap.appendChild(det);
     });
+  }
+
+  function addPage(page, opts) {
+    pages.push({ name: page.name, guide: page.guide || "", ph: page.ph || "", body: "" });
+    renderPages(); renderSuggest(); save(); refresh();
+    var blocks = document.querySelectorAll("#pageList .page-block");
+    var last = blocks[blocks.length - 1];
+    if (last) {
+      last.open = true;
+      last.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (opts && opts.focusName) last.querySelector(".page-name").select();
+    }
+  }
+
+  function renderSuggest() {
+    var box = document.getElementById("pageSuggest");
+    box.innerHTML = "";
+    var used = pages.map(function (p) { return String(p.name).trim(); });
+    SUGGESTED_PAGES.forEach(function (s) {
+      var b = document.createElement("button");
+      b.className = "chip"; b.type = "button";
+      b.textContent = "＋ " + s.name;
+      if (used.indexOf(s.name) >= 0) { b.disabled = true; b.textContent = "✓ " + s.name; }
+      b.addEventListener("click", function () { addPage(s); toast("「" + s.name + "」を追加しました"); });
+      box.appendChild(b);
+    });
+  }
+
+  document.getElementById("addPage").addEventListener("click", function () {
+    addPage({ name: "新しいページ", guide: "", ph: "" }, { focusName: true });
+  });
+
+  /* ---------- やりたいこと（動的） ---------- */
+  function renderFeatures() {
+    var wrap = document.getElementById("featureList");
+    wrap.innerHTML = "";
+    if (!features.length) {
+      var note = document.createElement("p");
+      note.className = "empty-note";
+      note.textContent = "まだありません。思いついたら追加してください。";
+      wrap.appendChild(note);
+      return;
+    }
+    features.forEach(function (f, i) {
+      var row = document.createElement("div");
+      row.className = "feature-row";
+      row.innerHTML =
+        '<input type="text" aria-label="やりたいこと">' +
+        '<input type="text" aria-label="補足">' +
+        '<button class="del-btn" type="button">削除</button>';
+      var a = row.children[0], b = row.children[1];
+      a.placeholder = "例）会員だけのページ";
+      b.placeholder = "補足（任意）";
+      a.value = f.name || ""; b.value = f.note || "";
+      a.addEventListener("input", function () { f.name = a.value; save(); refresh(); });
+      b.addEventListener("input", function () { f.note = b.value; save(); });
+      row.children[2].addEventListener("click", function () {
+        features.splice(i, 1); renderFeatures(); save(); refresh();
+      });
+      wrap.appendChild(row);
+    });
+  }
+
+  document.getElementById("addFeature").addEventListener("click", function () {
+    features.push({ name: "", note: "" });
+    renderFeatures();
+    var inputs = document.querySelectorAll("#featureList .feature-row input");
+    if (inputs.length) inputs[inputs.length - 2].focus();
   });
 
   /* ---------- ファイル ---------- */
@@ -742,22 +1016,31 @@
 
   /* ---------- 進捗 ---------- */
   function progressOf(panel) {
+    var tab = panel.dataset.tab;
+
+    if (tab === "copy") {
+      if (!pages.length) return 0;
+      var done = pages.filter(function (p) { return String(p.body || "").trim(); }).length;
+      return done / pages.length;
+    }
+
     var groups = {}, total = 0, filled = 0;
     panel.querySelectorAll("[data-key]").forEach(function (el) {
-      if (el.dataset.key === "agree") return;              // 同意チェックは進捗に含めない
+      if (el.dataset.key === "agree") return;
       if (el.type === "radio") {
         if (!(el.name in groups)) groups[el.name] = false;
         if (el.checked) groups[el.name] = true; return;
       }
       if (el.type === "checkbox") {
-        var k = "cb:" + panel.dataset.tab;
+        var k = "cb:" + tab;
         if (!(k in groups)) groups[k] = false;
         if (el.checked) groups[k] = true; return;
       }
       total++; if (String(el.value).trim()) filled++;
     });
     Object.keys(groups).forEach(function (k) { total++; if (groups[k]) filled++; });
-    if (panel.dataset.tab === "files") {
+
+    if (tab === "assets") {
       total += 3;
       ["logo", "photo", "doc"].forEach(function (k) { if (files[k].length) filled++; });
     }
@@ -801,6 +1084,31 @@
     });
   }
 
+  /* ---------- 送信データの組み立て ---------- */
+  function buildAnswers() {
+    var out = {};
+    Object.keys(state).forEach(function (k) { out[k] = state[k]; });
+
+    // ページは【ページ名】区切りの1つのテキストにまとめる
+    out.pagesText = pages.map(function (p) {
+      var name = String(p.name || "無題のページ").trim();
+      var body = String(p.body || "").trim();
+      return "【" + name + "】\n" + (body || "（未記入）");
+    }).join("\n\n");
+
+    out.pageNames = pages.map(function (p) { return String(p.name || "無題").trim(); }).join(" / ");
+
+    out.extraFeatures = features
+      .filter(function (f) { return String(f.name || "").trim(); })
+      .map(function (f) {
+        var n = String(f.name).trim();
+        var note = String(f.note || "").trim();
+        return "・" + n + (note ? "：" + note : "");
+      }).join("\n");
+
+    return out;
+  }
+
   /* ---------- 画像圧縮 / Base64 ---------- */
   function toBase64(blob) {
     return new Promise(function (resolve, reject) {
@@ -836,9 +1144,7 @@
     });
   }
 
-  /* ---------- GAS 通信 ----------
-     Content-Type を text/plain にすることで CORS プリフライトを回避する。
-     GAS 側は e.postData.contents を JSON.parse して受け取る。               */
+  /* ---------- GAS 通信 ---------- */
   function post(payload) {
     return fetch(GAS_URL, {
       method: "POST",
@@ -876,15 +1182,14 @@
 
     submitting = true;
     document.getElementById("btnSubmit").disabled = true;
-    var total = 1 + pending.length + 1;   // テキスト + ファイル + 仕上げ
+    var total = 1 + pending.length + 1;
     var step = 0;
     showOverlay(true, "送信しています", "このページを閉じずにお待ちください");
     setProgress(step, total, "入力内容を送信中");
 
-    post({ type: "text", projectId: projectId, answers: state })
+    post({ type: "text", projectId: projectId, answers: buildAnswers() })
       .then(function () {
         step++; setProgress(step, total, pending.length ? "ファイルを送信中" : "仕上げ中");
-        // ファイルは1件ずつ順番に送る（まとめて送るとGASの上限を超えるため）
         return pending.reduce(function (chain, item) {
           return chain.then(function () {
             return shrinkImage(item.rec.file)
@@ -951,17 +1256,19 @@
     if (!window.confirm("この端末に保存されている入力内容をすべて消します。よろしいですか？")) return;
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
     state = {};
+    features = [];
+    pages = DEFAULT_PAGES.map(function (p) {
+      return { name: p.name, guide: p.guide, ph: p.ph, body: "" };
+    });
     document.querySelectorAll("[data-key]").forEach(function (el) {
       if (el.type === "checkbox" || el.type === "radio") el.checked = false; else el.value = "";
     });
-    document.querySelectorAll("[data-count-for]").forEach(function (c) { c.textContent = "0 文字"; });
-    document.querySelectorAll("[data-status-for]").forEach(function (s) { s.textContent = "未記入"; s.classList.remove("filled"); });
     document.querySelectorAll(".procon").forEach(function (p) { p.classList.remove("show"); });
     ["logo", "photo", "doc"].forEach(function (k) {
       files[k].forEach(function (f) { if (f.url) URL.revokeObjectURL(f.url); });
       files[k] = []; renderFiles(k);
     });
-    refresh();
+    renderPages(); renderSuggest(); renderFeatures(); refresh();
     toast("入力内容を消しました");
   });
 
@@ -975,10 +1282,13 @@
   }
 
   /* ---------- 初期化 ---------- */
-  restore();
-  ["contact", "purpose"].forEach(syncProCon);
-  document.querySelectorAll("[data-counter]").forEach(function (ta) { ta.dispatchEvent(new Event("input")); });
-  refresh();
+  pages = DEFAULT_PAGES.map(function (p) {
+    return { name: p.name, guide: p.guide, ph: p.ph, body: "" };
+  });
+  var restored = restore();
+  ["contact", "purpose", "domainStatus", "reuseText"].forEach(syncProCon);
+  renderPages(); renderSuggest(); renderFeatures(); refresh();
+  if (restored) toast("前回の入力内容を復元しました");
 })();
 </script>
 </body>
