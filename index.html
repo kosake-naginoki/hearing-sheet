@@ -589,7 +589,7 @@
       </div>
 
       <div class="card starter">
-        <h3>まずは、この6つだけで大丈夫です</h3>
+        <h3>まずは、<span id="starterCount">7</span>つだけで大丈夫です</h3>
         <p class="hint">ここが埋まれば、制作に取りかかれます。<br>残りは、お時間のあるときに少しずつで構いません。</p>
         <ul class="starter-list" id="starterList"></ul>
         <div class="starter-done" id="starterDone" hidden>✓ 着手できる状態です。ここから先は、書けるところだけで大丈夫です。</div>
@@ -1504,6 +1504,8 @@
       });
       ul.appendChild(li);
     });
+    var cnt = document.getElementById("starterCount");
+    if (cnt) cnt.textContent = STARTER.length;
     document.getElementById("starterDone").hidden = (done < STARTER.length);
   }
 
