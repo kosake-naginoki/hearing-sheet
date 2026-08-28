@@ -408,7 +408,7 @@
   </div>
 </header>
 
-<div class="shell" id="shell">
+<div class="shell" id="shell" style="visibility:hidden">
   <nav class="rail" role="tablist" aria-label="ヒアリング項目">
     <p class="rail-note">全部まとめて書く必要はありません。分かるところから、何回かに分けてご記入ください。入力内容はこの端末に自動保存されます。</p>
   </nav>
@@ -741,6 +741,15 @@
   </main>
 </div>
 
+<div class="done-screen" id="invalidScreen">
+  <div class="mark" style="background:var(--warn-wash);color:var(--warn)" aria-hidden="true">!</div>
+  <h2>URLをご確認ください</h2>
+  <p>このURLでは、ヒアリングシートを開けませんでした。<br>
+  お送りしたメールのリンクを、もう一度お開きいただけますでしょうか。<br><br>
+  リンクが見当たらない場合や、何度試しても同じ表示になる場合は、<br>
+  お手数ですが担当者までご連絡ください。</p>
+</div>
+
 <div class="done-screen" id="doneScreen">
   <div class="mark" aria-hidden="true">✓</div>
   <h2>送信が完了しました</h2>
@@ -843,18 +852,12 @@
     { name: "プライバシーポリシー", type: "text", guide: "定型文でよければ、こちらでご用意します。", ph: "" }
   ];
 
-  /* ---- 案件ID ---- */
+  /* ---- 案件ID ----
+     案件IDは「案件一覧」シートから発行されたものだけが有効。
+     打ち間違いに気づかないまま全部書いて弾かれるのを防ぐため、
+     ページを開いた時点で照合する。 */
   var params = new URLSearchParams(location.search);
   var projectId = (params.get("id") || "").trim();
-  if (!projectId) {
-    try {
-      projectId = localStorage.getItem("hs-fallback-id") || "";
-      if (!projectId) {
-        projectId = "guest-" + Math.random().toString(36).slice(2, 10);
-        localStorage.setItem("hs-fallback-id", projectId);
-      }
-    } catch (e) { projectId = "guest"; }
-  }
   var STORAGE_KEY = "hearing-sheet::" + projectId;
 
   var rail = document.querySelector(".rail");
@@ -1539,13 +1542,42 @@
   }
 
   /* ---------- 初期化 ---------- */
-  pages = DEFAULT_PAGES.map(function (p) {
-    return { name: p.name, type: p.type, guide: p.guide, ph: p.ph, body: "", items: [] };
-  });
-  var restored = restore();
-  ["contact", "purpose", "domainStatus", "reuseText"].forEach(syncProCon);
-  renderPages(); renderSuggest(); renderFeatures(); refresh();
-  if (restored) toast("前回の入力内容を復元しました");
+  function showInvalid() {
+    document.getElementById("shell").style.display = "none";
+    document.getElementById("invalidScreen").classList.add("show");
+  }
+
+  function startForm(company) {
+    pages = DEFAULT_PAGES.map(function (p) {
+      return { name: p.name, type: p.type, guide: p.guide, ph: p.ph, body: "", items: [] };
+    });
+    var restored = restore();
+    ["contact", "purpose", "domainStatus", "reuseText"].forEach(syncProCon);
+    renderPages(); renderSuggest(); renderFeatures(); refresh();
+    if (company) {
+      document.getElementById("brandSub").textContent = company + " 様";
+    }
+    document.getElementById("shell").style.visibility = "";
+    if (restored) toast("前回の入力内容を復元しました");
+  }
+
+  if (!projectId) {
+    // ?id= が無い＝発行されたURLではない
+    showInvalid();
+  } else if (!GAS_URL) {
+    // ローカルでの見た目確認用。送信先が未設定なら照合をとばす
+    startForm("");
+  } else {
+    post({ type: "verify", projectId: projectId })
+      .then(function (res) {
+        if (res.valid) startForm(res.company);
+        else showInvalid();
+      })
+      .catch(function () {
+        // 通信できないだけの場合まで入力を止めない（記入内容は端末に残る）
+        startForm("");
+      });
+  }
 })();
 </script>
 </body>
