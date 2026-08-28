@@ -387,6 +387,44 @@
   .mini.pop   { --mini-bg:#FFFFFF; --mini-ink:#2A2320; --mini-accent:#E2643C; --mini-hero:#FFE2D2; --mini-card:#FFEFE6; --mini-r:10px; --mini-pad:9px; --mini-t1:9px; --mini-heroflex:1.7; }
   .mini.pop .m-cards { grid-template-columns: repeat(2, 1fr); }
 
+  /* ---------- 「まずはこれだけ」チェックリスト ---------- */
+  .starter { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-wash), var(--shadow); }
+  .starter h3 { color: var(--accent); }
+  .starter-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+  .starter-list li {
+    display: flex; align-items: center; gap: 10px; font-size: 13.5px;
+    padding: 9px 12px; border-radius: 8px; background: var(--paper); border: 1px solid var(--line-soft);
+  }
+  .starter-list .tick {
+    width: 18px; height: 18px; border-radius: 50%; flex: none; display: grid; place-items: center;
+    border: 1.5px solid var(--line); color: transparent; font-size: 11px; font-weight: 700;
+  }
+  .starter-list li.done { background: var(--good-wash); border-color: transparent; }
+  .starter-list li.done .tick { background: var(--good); border-color: var(--good); color: #fff; }
+  .starter-list li.done span { color: var(--good); }
+  .starter-list .jump {
+    margin-left: auto; font-size: 12px; color: var(--accent); background: none; border: none;
+    cursor: pointer; font-family: var(--sans); flex: none;
+  }
+  .starter-done { font-size: 13px; color: var(--good); font-weight: 600; margin-top: 12px; }
+
+  .later-note {
+    font-size: 12.5px; color: var(--ink-faint); text-align: center;
+    padding: 12px; margin: 4px 0 14px; border-top: 1px dashed var(--line); line-height: 1.7;
+  }
+  /* ---------- 音声入力の案内 ---------- */
+  .mic-hint {
+    display: flex; align-items: flex-start; gap: 9px;
+    font-size: 12.5px; color: var(--ink-muted); line-height: 1.65;
+    background: var(--surface-2); border-radius: 9px; padding: 10px 13px; margin-bottom: 16px;
+  }
+  .mic-hint svg { flex: none; margin-top: 2px; color: var(--accent); }
+
+  /* ---------- 避けたい方向 ---------- */
+  .avoid .choice:has(input:checked) {
+    border-color: var(--warn); background: var(--warn-wash);
+  }
+  .avoid .choice input { accent-color: var(--warn); }
 </style>
 </head>
 <body>
@@ -423,16 +461,35 @@
         <p>まずは御社のことと、ホームページで叶えたいことを教えてください。空欄のままでも先に進めます。</p>
       </div>
 
+      <div class="card starter">
+        <h3>まずは、この6つだけで大丈夫です</h3>
+        <p class="hint">ここが埋まれば、制作に取りかかれます。<br>残りは、お時間のあるときに少しずつで構いません。</p>
+        <ul class="starter-list" id="starterList"></ul>
+        <div class="starter-done" id="starterDone" hidden>✓ 着手できる状態です。ここから先は、書けるところだけで大丈夫です。</div>
+      </div>
+
       <div class="card">
-        <h3>お客様の情報</h3>
-        <p class="hint">ご連絡と、サイトへの掲載に使います。</p>
+        <h3>ご連絡先</h3>
+        <p class="hint">こちらから制作の件でご連絡するための窓口です。<span class="opt-tag">サイトには載せません</span></p>
         <div class="grid-2">
           <div class="field"><label>会社名・団体名</label><input type="text" data-key="companyName" placeholder="株式会社なぎのき"></div>
           <div class="field"><label>ご担当者名</label><input type="text" data-key="personName" placeholder="山田 太郎"></div>
-          <div class="field"><label>メールアドレス</label><input type="email" data-key="email" placeholder="info@example.com" autocomplete="email"></div>
-          <div class="field"><label>お電話番号 <span class="opt-tag">任意</span></label><input type="tel" data-key="tel" placeholder="000-0000-0000"></div>
+          <div class="field"><label>ご連絡先メール</label><input type="email" data-key="email" placeholder="tantou@example.com" autocomplete="email"></div>
+          <div class="field"><label>ご連絡先電話 <span class="opt-tag">任意</span></label><input type="tel" data-key="tel" placeholder="000-0000-0000"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>サイトに載せる連絡先</h3>
+        <p class="hint"><b>ホームページに掲載します。</b>お客様からのご連絡を受ける窓口を教えてください。<br>
+        担当者個人の携帯やメールではなく、公開してよいものをお書きください。</p>
+        <div class="grid-2">
+          <div class="field"><label>掲載する電話番号</label><input type="tel" data-key="pubTel" placeholder="0995-00-0000"></div>
+          <div class="field"><label>掲載するメールアドレス <span class="opt-tag">任意</span></label><input type="email" data-key="pubEmail" placeholder="info@example.com"></div>
+          <div class="field"><label>受付時間</label><input type="text" data-key="pubHours" placeholder="平日 8:30〜17:30"></div>
+          <div class="field"><label>定休日</label><input type="text" data-key="pubClosed" placeholder="日曜・祝日"></div>
           <div class="field"><label>事業の内容</label><input type="text" data-key="business" placeholder="例）建設業／飲食店／福祉サービス"></div>
-          <div class="field"><label>所在地 <span class="opt-tag">任意</span></label><input type="text" data-key="address" placeholder="〇〇県〇〇市…"></div>
+          <div class="field"><label>掲載する住所 <span class="opt-tag">任意</span></label><input type="text" data-key="address" placeholder="〇〇県〇〇市〇〇町1-2-3"></div>
         </div>
       </div>
 
@@ -451,57 +508,8 @@
         </div>
       </div>
 
-      <div class="card">
-        <h3>ご予算とご希望の時期</h3>
-        <div class="grid-2">
-          <div class="field">
-            <label>ご予算の目安</label>
-            <select data-key="budget">
-              <option value="">選んでください</option>
-              <option>まだ決めていない／相談したい</option>
-              <option>〜20万円</option><option>20〜50万円</option>
-              <option>50〜100万円</option><option>100万円以上</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>公開したい時期</label>
-            <select data-key="deadline">
-              <option value="">選んでください</option>
-              <option>急ぎではない</option><option>3か月以内</option>
-              <option>2か月以内</option><option>1か月以内</option>
-              <option>希望日あり（下に記入）</option>
-            </select>
-          </div>
-        </div>
-        <div class="field"><label>時期についての補足 <span class="opt-tag">任意</span></label><input type="text" data-key="deadlineNote" placeholder="例）10月の展示会に間に合わせたい"></div>
-      </div>
-
-      <div class="card">
-        <h3>ドメイン・サーバーの現状</h3>
-        <p class="hint">「わからない」で構いません。こちらで調べてご案内します。公開の直前に慌てないための確認です。</p>
-        <div class="field">
-          <label>ホームページの住所（ドメイン）</label>
-          <div class="choices">
-            <label class="choice"><input type="radio" name="domainStatus" data-key="domainStatus" value="独自ドメインを持っている"><span class="choice-body"><b>すでに持っている</b><span>example.co.jp のような、御社専用の住所</span></span></label>
-            <label class="choice"><input type="radio" name="domainStatus" data-key="domainStatus" value="これから取得したい"><span class="choice-body"><b>これから取りたい</b><span>希望があれば下に書いてください</span></span></label>
-            <label class="choice"><input type="radio" name="domainStatus" data-key="domainStatus" value="わからない・任せたい"><span class="choice-body"><b>わからない／お任せしたい</b><span>こちらで確認してご提案します</span></span></label>
-          </div>
-        </div>
-        <div class="grid-2">
-          <div class="field"><label>ドメイン名 <span class="opt-tag">任意</span></label><input type="text" data-key="domainName" placeholder="example.co.jp"></div>
-          <div class="field"><label>契約先・管理会社 <span class="opt-tag">任意</span></label><input type="text" data-key="domainAdmin" placeholder="例）お名前.com／前の制作会社"></div>
-        </div>
-        <div class="field">
-          <label>サーバー（ホームページを置く場所）</label>
-          <select data-key="serverStatus">
-            <option value="">選んでください</option>
-            <option>契約済み</option>
-            <option>これから契約したい</option>
-            <option>わからない・任せたい</option>
-          </select>
-        </div>
-        <div class="field"><label>サーバー・メールについての補足 <span class="opt-tag">任意</span></label><input type="text" data-key="serverNote" placeholder="例）会社のメールも同じドメインで使っている"></div>
-      </div>
+      <p class="later-note">ご予算・公開時期・ドメインやサーバーのことは、<br>
+      このあとの打ち合わせでお伺いします。ここに書く必要はありません。</p>
     </section>
 
     <!-- ===== 2. 事業のこと ===== -->
@@ -511,6 +519,8 @@
         <h2>事業のこと</h2>
         <p>ここが、伝わるホームページになるかどうかの分かれ目です。うまくまとめようとせず、普段お客様に話していることをそのまま書いてください。</p>
       </div>
+
+<p class="mic-hint"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v4"/></svg><span><b>書くのが大変なときは、話しても入力できます。</b><br>スマートフォンやパソコンのキーボードにあるマイクのボタンを押すと、話した言葉がそのまま文字になります。話し言葉のままで構いません。</span></p>
 
       <div class="card">
         <h3>どんなお客様に届けたいですか</h3>
@@ -532,30 +542,33 @@
           <label>強み・こだわり</label>
           <textarea data-key="strength" placeholder="例）見積りが早い（当日中に出せる）&#10;例）職人が全員自社の社員&#10;例）女性スタッフが対応するので相談しやすい"></textarea>
         </div>
+      </div>
+
+      <div class="card">
+        <h3>お客様によく言われる一言</h3>
+        <p class="hint">トップページの一番大きな文字は、ここから作ります。<br>
+        きれいな言葉でなくて構いません。<b>実際に言われたことを、そのまま</b>教えてください。</p>
         <div class="field">
-          <label>気になっている同業他社 <span class="opt-tag">任意</span></label>
-          <textarea data-key="competitor" placeholder="会社名でもURLでも構いません。「ここのサイトはいいと思う」「ここには負けたくない」など。"></textarea>
+          <label>よく言われること・褒められること</label>
+          <textarea data-key="catchWords" placeholder="例）「見積りが早くて助かった」&#10;例）「女性の方が来てくれるので話しやすい」&#10;例）「他より安かったのに丁寧だった」"></textarea>
         </div>
       </div>
 
       <div class="card">
-        <h3>お客様からよく聞かれること</h3>
-        <p class="hint">そのまま「よくある質問」ページの原稿になります。3つくらいあると助かります。</p>
+        <h3>お取引の条件</h3>
+        <p class="hint">数十万円のご依頼を検討するお客様が、必ず探す情報です。<br>
+        分かる範囲で、まとめて書いていただければ整えます。</p>
         <div class="field">
-          <label>よく聞かれる質問 <span class="opt-tag">任意</span></label>
-          <textarea data-key="faq" placeholder="例）見積りは無料ですか？&#10;例）土日も対応してもらえますか？&#10;例）どのくらいの期間がかかりますか？"></textarea>
+          <label>保証・アフター・お支払い・工期 <span class="opt-tag">任意</span></label>
+          <textarea data-key="terms" placeholder="保証：施工後5年&#10;アフター：年1回の点検あり&#10;支払い：現金・振込・クレジット可&#10;工期の目安：浴室なら4〜5日"></textarea>
         </div>
       </div>
 
       <div class="card">
         <h3>今の困りごとと、目指すところ</h3>
         <div class="field">
-          <label>今、集客や広報で困っていること <span class="opt-tag">任意</span></label>
-          <textarea data-key="trouble" placeholder="例）チラシの反応が落ちてきた／若いお客様が来ない／問い合わせの電話対応に手が取られる"></textarea>
-        </div>
-        <div class="field">
-          <label>どうなったら「作ってよかった」と思えますか <span class="opt-tag">任意</span></label>
-          <textarea data-key="success" placeholder="例）月に2〜3件、ホームページから問い合わせが来る&#10;例）取引先に「しっかりした会社ですね」と言われる"></textarea>
+          <label>困っていること／どうなったら成功か <span class="opt-tag">任意</span></label>
+          <textarea data-key="trouble" placeholder="例）チラシの反応が落ちてきた。&#10;　　月に2〜3件、ホームページから問い合わせが来るようになれば嬉しい。"></textarea>
         </div>
       </div>
     </section>
@@ -566,6 +579,16 @@
         <span class="eyebrow">Step 03</span>
         <h2>デザイン・機能</h2>
         <p>「こんな雰囲気がいい」「これができたら嬉しい」を選んでいただくだけで大丈夫です。専門用語には補足を付けています。</p>
+      </div>
+
+      <div class="card">
+        <h3>参考にしたいサイト</h3>
+        <p class="hint"><b>ここが、いちばん伝わります。</b>2〜3件あると、仕上がりが大きく変わります。<br>
+        同業他社でも、まったく違う業種でも構いません。「ここのこの部分が good」だけでも十分です。</p>
+        <div class="field">
+          <label>参考サイト・気になる同業他社</label>
+          <textarea data-key="refSites" placeholder="例）https://example.com　←　写真の見せ方がいい&#10;例）〇〇工務店　←　同業。うちより見やすいと思う&#10;例）近所の〇〇カフェのサイト　←　色づかいが好き"></textarea>
+        </div>
       </div>
 
       <div class="card">
@@ -582,9 +605,21 @@
           <label>使いたい色・避けたい色 <span class="opt-tag">任意</span></label>
           <input type="text" data-key="colorNote" placeholder="例）ロゴに合わせて緑を使いたい／赤は避けたい">
         </div>
-        <div class="field">
-          <label>参考にしたいサイト <span class="opt-tag">任意</span></label>
-          <textarea data-key="refSites" placeholder="URLでも、「〇〇のお店のサイトみたいな感じ」でも構いません。"></textarea>
+      </div>
+
+      <div class="card avoid">
+        <h3>こういうのは避けたい</h3>
+        <p class="hint">「好き」より「嫌」の方が、はっきりしていることが多いものです。<br>
+        当てはまるものがあれば選んでください。仕上がりが大きく変わります。</p>
+        <div class="choices">
+          <label class="choice"><input type="checkbox" data-key="avoid_loud" value="派手・にぎやかすぎる"><span class="choice-body"><b>派手・にぎやかすぎるのは嫌</b><span>色が多い、文字が大きく踊っている感じ</span></span></label>
+          <label class="choice"><input type="checkbox" data-key="avoid_stiff" value="堅苦しい・お役所っぽい"><span class="choice-body"><b>堅苦しい・お役所っぽいのは嫌</b><span>文字ばかりで冷たい印象</span></span></label>
+          <label class="choice"><input type="checkbox" data-key="avoid_cheap" value="安っぽく見える"><span class="choice-body"><b>安っぽく見えるのは嫌</b><span>作りが雑、素材の質が低く見える</span></span></label>
+          <label class="choice"><input type="checkbox" data-key="avoid_old" value="古くさい・昔のサイトっぽい"><span class="choice-body"><b>古くさいのは嫌</b><span>昔のホームページのような見た目</span></span></label>
+        </div>
+        <div class="field" style="margin-top:16px">
+          <label>そのほか「これは嫌」ということ <span class="opt-tag">任意</span></label>
+          <input type="text" data-key="avoidFree" placeholder="例）社長の顔をどーんと出すのは避けたい">
         </div>
       </div>
 
@@ -643,6 +678,8 @@
         <p>必要なページを足したり減らしたりできます。スタッフ紹介やQ&amp;Aのように「1つずつ増やしていく」書き方も選べます。文章は完成していなくて構いません。</p>
       </div>
 
+<p class="mic-hint"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v4"/></svg><span><b>書くのが大変なときは、話しても入力できます。</b><br>スマートフォンやパソコンのキーボードにあるマイクのボタンを押すと、話した言葉がそのまま文字になります。話し言葉のままで構いません。</span></p>
+
       <div id="pageList"></div>
 
       <button class="add-btn" type="button" id="addPage">＋ ページを追加</button>
@@ -676,10 +713,6 @@
             <label class="choice"><input type="radio" name="reuseText" data-key="reuseText" value="内容は使うが書き直したい"><span class="choice-body"><b>内容は使うが、書き直したい</b><span>情報は活かしつつ、表現を新しくします</span></span></label>
             <label class="choice"><input type="radio" name="reuseText" data-key="reuseText" value="使わず新しく作りたい"><span class="choice-body"><b>使わず、新しく作りたい</b><span>まっさらな状態から考えます</span></span></label>
           </div>
-        </div>
-        <div class="field">
-          <label>特に引き継ぎたいページ・気になる点 <span class="opt-tag">任意</span></label>
-          <textarea data-key="reusePages" placeholder="例）会社概要と施工事例はそのまま使いたい／トップの文章は古いので変えたい"></textarea>
         </div>
       </div>
 
@@ -818,6 +851,21 @@
         return "Q. " + (it.q || "（質問未記入）") + "\nA. " + (it.a || "（答え未記入）");
       }
     },
+    voice: {
+      label: "お客様の声を追加していく",
+      unit: "件目", addLabel: "＋ お客様の声を追加",
+      fields: [
+        { key: "who",  label: "地域・お客様",   ph: "霧島市 A様（60代ご夫婦）" },
+        { key: "what", label: "ご依頼内容",     ph: "浴室リフォーム" },
+        { key: "ok",   label: "掲載の可否",     ph: "掲載OK ／ 匿名なら可" },
+        { key: "text", label: "いただいた声",   ph: "相談から工事まで、ずっと丁寧に対応してもらえました。", area: true }
+      ],
+      render: function (it) {
+        var head = [it.who, it.what].filter(Boolean).join(" ／ ");
+        return "■ " + (head || "（お客様未記入）") + "\n" + (it.text || "（声が未記入）")
+             + (it.ok ? "\n（掲載: " + it.ok + "）" : "");
+      }
+    },
     items: {
       label: "項目を追加していく（料金表・事例など）",
       unit: "件目", addLabel: "＋ 項目を追加",
@@ -837,13 +885,13 @@
     { name: "トップページ",       type: "text", guide: "最初に見える1〜2行のキャッチコピーと、伝えたいことを3つほど。「誰に」「何を」してあげられるかが伝わると強くなります。", ph: "例）地域のみなさまの暮らしを、40年支えてきました。\n・創業40年の実績\n・自社施工だから安心価格\n・見積り無料、当日対応可" },
     { name: "会社概要",           type: "text", guide: "会社名・所在地・代表者名・設立年・従業員数・事業内容など。パンフレットの丸写しでも構いません。", ph: "会社名：\n所在地：\n代表者：\n設立：\n事業内容：" },
     { name: "サービス・事業内容", type: "items", guide: "扱っているサービスを、ひとつずつ追加してください。料金が決まっていなければ「要相談」で構いません。", ph: "" },
-    { name: "お客様の声・実績",   type: "text", guide: "実際にいただいた感想や、施工事例など。掲載の許可が取れているものだけをお書きください。", ph: "例）〇〇市 A様／「相談から工事まで丁寧に対応してもらえました」" },
-    { name: "お問い合わせ",       type: "text", guide: "受付時間、定休日、フォームに入れたい項目など。", ph: "受付時間：平日 9:00〜18:00\n定休日：土日祝\nフォーム項目：お名前／メール／電話／ご相談内容" }
+    { name: "お客様の声・実績",   type: "voice", guide: "1件ずつ追加してください。3件あると、お問い合わせの数が変わります。掲載の許可が取れているものだけをお願いします。", ph: "" },
+    { name: "よくある質問",       type: "qa",   guide: "お客様からよく聞かれることを、1問ずつ。3つあると十分です。", ph: "" },
+    { name: "お問い合わせ",       type: "text", guide: "フォームに入れたい項目や、ご要望があれば。受付時間・定休日は「基本情報」でお伺いしています。", ph: "例）ご相談の種類を選べるようにしたい" }
   ];
 
   var SUGGESTED_PAGES = [
     { name: "スタッフ紹介",   type: "people", guide: "お一人ずつ追加してください。写真は「素材・既存サイト」タブでアップロードし、ここにお名前を書いていただければ紐づけます。", ph: "" },
-    { name: "よくある質問",   type: "qa",     guide: "お客様からよく聞かれることを、1問ずつ追加してください。", ph: "" },
     { name: "採用情報",       type: "text",   guide: "求める人物像、仕事内容、待遇、先輩の声など。", ph: "募集職種：\n仕事内容：\n勤務時間：\n給与：" },
     { name: "料金表",         type: "items",  guide: "メニューと価格を1件ずつ。「要相談」でも構いません。", ph: "" },
     { name: "施工事例・実績", type: "items",  guide: "事例を1件ずつ。写真は「素材・既存サイト」タブからどうぞ。", ph: "" },
@@ -1263,6 +1311,40 @@
     });
   }
 
+  /* ---------- 「まずはこれだけ」チェックリスト ---------- */
+  var STARTER = [
+    { key: "companyName", tab: "basic",    label: "会社名" },
+    { key: "business",    tab: "basic",    label: "事業の内容" },
+    { key: "pubTel",      tab: "basic",    label: "サイトに載せる電話番号" },
+    { key: "target",      tab: "business", label: "来てほしいお客様" },
+    { key: "strength",    tab: "business", label: "強み・こだわり" },
+    { key: "catchWords",  tab: "business", label: "よく言われる一言" }
+  ];
+
+  function renderStarter() {
+    var ul = document.getElementById("starterList");
+    if (!ul) return;
+    ul.innerHTML = "";
+    var done = 0;
+    STARTER.forEach(function (item) {
+      var filled = String(state[item.key] || "").trim().length > 0;
+      if (filled) done++;
+      var li = document.createElement("li");
+      if (filled) li.classList.add("done");
+      li.innerHTML = '<span class="tick">✓</span><span></span>' +
+                     (filled ? '' : '<button class="jump" type="button">記入する →</button>');
+      li.querySelectorAll("span")[1].textContent = item.label;
+      var jump = li.querySelector(".jump");
+      if (jump) jump.addEventListener("click", function () {
+        show(item.tab);
+        var el = document.querySelector('[data-key="' + item.key + '"]');
+        if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.focus(); }
+      });
+      ul.appendChild(li);
+    });
+    document.getElementById("starterDone").hidden = (done < STARTER.length);
+  }
+
   /* ---------- 進捗 ---------- */
   function progressOf(panel) {
     var tab = panel.dataset.tab;
@@ -1310,6 +1392,7 @@
     var pct = n ? Math.round((sum / n) * 100) : 0;
     document.getElementById("overallBar").style.width = pct + "%";
     document.getElementById("overallPct").textContent = pct + "%";
+    renderStarter();
   }
 
   function renderReview() {
