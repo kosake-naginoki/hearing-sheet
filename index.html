@@ -584,7 +584,8 @@
       <div class="card">
         <h3>参考にしたいサイト</h3>
         <p class="hint"><b>ここが、いちばん伝わります。</b>2〜3件あると、仕上がりが大きく変わります。<br>
-        同業他社でも、まったく違う業種でも構いません。「ここのこの部分が good」だけでも十分です。</p>
+        同業他社でも、まったく違う業種でも構いません。「ここのこの部分が good」だけでも十分です。<br>
+        <b>実際に開けるURL、または正確な会社名</b>でお願いします。伏せられていると見に行けません。</p>
         <div class="field">
           <label>参考サイト・気になる同業他社</label>
           <textarea data-key="refSites" placeholder="例）https://example.com　←　写真の見せ方がいい&#10;例）〇〇工務店　←　同業。うちより見やすいと思う&#10;例）近所の〇〇カフェのサイト　←　色づかいが好き"></textarea>
@@ -643,7 +644,22 @@
           <div class="pro"><h4>MERIT</h4><ul><li>いちばん手軽で、費用もかかりません</li></ul></div>
           <div class="con"><h4>NOTE</h4><ul><li>電話が苦手なお客様を取りこぼす可能性があります</li></ul></div>
         </div>
-        <div class="field" style="margin-top:16px">
+        <div class="grid-2" style="margin-top:16px">
+          <div class="field">
+            <label>お問い合わせの届け先メール</label>
+            <input type="email" data-key="formTo" placeholder="uketori@example.com">
+          </div>
+          <div class="field">
+            <label>お客様への自動返信</label>
+            <select data-key="autoReply">
+              <option value="">選んでください</option>
+              <option>自動で「受け付けました」を返したい</option>
+              <option>自動返信は不要</option>
+              <option>おまかせ</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
           <label>お問い合わせについてのご要望 <span class="opt-tag">任意</span></label>
           <textarea data-key="contactFree" placeholder="例）予約したい日時を選べるようにしたい／担当者ごとに振り分けたい　など"></textarea>
         </div>
@@ -851,6 +867,17 @@
         return "Q. " + (it.q || "（質問未記入）") + "\nA. " + (it.a || "（答え未記入）");
       }
     },
+    top: {
+      label: "載せたいことを箇条書きで（トップページ向け）",
+      unit: "つ目", addLabel: "＋ 載せたいことを追加",
+      fields: [
+        { key: "point", label: "載せたいこと", ph: "見積りが早いこと" },
+        { key: "why",   label: "ひとこと補足",  ph: "その日のうちに金額を出せます", area: true }
+      ],
+      render: function (it) {
+        return "・" + (it.point || "（未記入）") + (it.why ? "\n　" + it.why : "");
+      }
+    },
     voice: {
       label: "お客様の声を追加していく",
       unit: "件目", addLabel: "＋ お客様の声を追加",
@@ -882,7 +909,7 @@
   };
 
   var DEFAULT_PAGES = [
-    { name: "トップページ",       type: "text", guide: "最初に見える1〜2行のキャッチコピーと、伝えたいことを3つほど。「誰に」「何を」してあげられるかが伝わると強くなります。", ph: "例）地域のみなさまの暮らしを、40年支えてきました。\n・創業40年の実績\n・自社施工だから安心価格\n・見積り無料、当日対応可" },
+    { name: "トップページ",       type: "top",  guide: "文章にしなくて大丈夫です。「これは載せたい」ということを3つ、箇条書きで教えてください。文章にするのはこちらの仕事です。", ph: "" },
     { name: "会社概要",           type: "text", guide: "会社名・所在地・代表者名・設立年・従業員数・事業内容など。パンフレットの丸写しでも構いません。", ph: "会社名：\n所在地：\n代表者：\n設立：\n事業内容：" },
     { name: "サービス・事業内容", type: "items", guide: "扱っているサービスを、ひとつずつ追加してください。料金が決まっていなければ「要相談」で構いません。", ph: "" },
     { name: "お客様の声・実績",   type: "voice", guide: "1件ずつ追加してください。3件あると、お問い合わせの数が変わります。掲載の許可が取れているものだけをお願いします。", ph: "" },
@@ -1318,7 +1345,8 @@
     { key: "pubTel",      tab: "basic",    label: "サイトに載せる電話番号" },
     { key: "target",      tab: "business", label: "来てほしいお客様" },
     { key: "strength",    tab: "business", label: "強み・こだわり" },
-    { key: "catchWords",  tab: "business", label: "よく言われる一言" }
+    { key: "catchWords",  tab: "business", label: "よく言われる一言" },
+    { page: "トップページ", tab: "copy",     label: "トップページに載せたいこと" }
   ];
 
   function renderStarter() {
@@ -1327,7 +1355,13 @@
     ul.innerHTML = "";
     var done = 0;
     STARTER.forEach(function (item) {
-      var filled = String(state[item.key] || "").trim().length > 0;
+      var filled;
+      if (item.page) {
+        var pg = pages.filter(function (p) { return String(p.name).trim() === item.page; })[0];
+        filled = !!(pg && pageIsFilled(pg));
+      } else {
+        filled = String(state[item.key] || "").trim().length > 0;
+      }
       if (filled) done++;
       var li = document.createElement("li");
       if (filled) li.classList.add("done");
@@ -1337,6 +1371,7 @@
       var jump = li.querySelector(".jump");
       if (jump) jump.addEventListener("click", function () {
         show(item.tab);
+        if (item.page) return;
         var el = document.querySelector('[data-key="' + item.key + '"]');
         if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.focus(); }
       });
