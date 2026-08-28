@@ -491,6 +491,9 @@
           <input type="url" id="importUrl" placeholder="https://example.com" aria-label="今のホームページのURL">
           <button class="btn-import" type="button" id="btnImport">読み込む</button>
         </div>
+        <p class="hint" style="margin:10px 0 0">
+          もう一度読み込むと、最新の内容に更新できます。<br>
+          すでに書いた内容を残すか上書きするかは、そのとき選べます。</p>
         <div class="import-msg" id="importMsg"></div>
       </div>
 
@@ -1378,33 +1381,33 @@
     el.innerHTML = html;
   }
 
-  function applyImport(data) {
-    var filled = [];
+  function applyImport(data, overwrite) {
+    var filled = [], overwritten = [];
 
-    // 固定項目は「空欄のときだけ」埋める（書いてもらった内容を消さない）
     var map = {
       companyName: "会社名", pubTel: "電話番号", pubEmail: "メールアドレス",
-      address: "住所", pubHours: "受付時間"
+      address: "住所", pubHours: "受付時間", pubClosed: "定休日"
     };
     Object.keys(map).forEach(function (k) {
       var v = data.fields[k];
-      if (!v || String(state[k] || "").trim()) return;
+      if (!v) return;
+      var had = String(state[k] || "").trim();
+      if (had && !overwrite) return;          // 上書きしない設定なら、書いてある欄は触らない
+      if (had && had === String(v)) return;   // 同じ値なら何もしない
       state[k] = String(v);
       var el = document.querySelector('[data-key="' + k + '"]');
       if (el) el.value = state[k];
-      filled.push(map[k]);
+      (had ? overwritten : filled).push(map[k]);
     });
 
-    // 取得元を記録（プロンプトに注記が入る）
     state.importedFrom = data.url;
-    if (!String(state.currentUrl || "").trim()) {
+    var cu = document.querySelector('[data-key="currentUrl"]');
+    if (overwrite || !String(state.currentUrl || "").trim()) {
       state.currentUrl = data.url;
-      var cu = document.querySelector('[data-key="currentUrl"]');
       if (cu) cu.value = data.url;
     }
 
-    // ページ：本文が空のページにだけ流し込む。無いページ名は追加する
-    var addedPages = 0, filledPages = 0;
+    var addedPages = 0, filledPages = 0, replacedPages = 0;
     (data.pages || []).forEach(function (ip) {
       var name = String(ip.name || "").trim();
       var body = String(ip.body || "").trim();
@@ -1416,18 +1419,20 @@
         addedPages++;
         return;
       }
-      if (pageType(pg) === "text" && !String(pg.body || "").trim()) {
-        pg.body = body; filledPages++;
-      }
+      if (pageType(pg) !== "text") return;    // カード形式のページには流し込まない
+      if (!String(pg.body || "").trim()) { pg.body = body; filledPages++; }
+      else if (overwrite) { pg.body = body; replacedPages++; }
     });
 
     renderPages(); renderSuggest(); save(); refresh();
 
     var parts = [];
-    if (filled.length)  parts.push(filled.join("・") + " を取り込みました");
-    if (filledPages)    parts.push(filledPages + " ページに文章を入れました");
-    if (addedPages)     parts.push(addedPages + " ページを追加しました");
-    if (!parts.length)  parts.push("すでにご記入済みだったため、上書きはしていません");
+    if (filled.length)      parts.push(filled.join("・") + " を取り込みました");
+    if (overwritten.length) parts.push(overwritten.join("・") + " を上書きしました");
+    if (filledPages)        parts.push(filledPages + " ページに文章を入れました");
+    if (replacedPages)      parts.push(replacedPages + " ページの文章を入れ替えました");
+    if (addedPages)         parts.push(addedPages + " ページを追加しました");
+    if (!parts.length)      parts.push("前回と同じ内容でした。変更はありません");
 
     setImportMsg("ok",
       "✓ " + parts.join("。") + "。<div class=\"import-warn\">" +
@@ -1435,6 +1440,23 @@
       "電話番号・住所・受付時間・料金は変わっていることがあります。" +
       "古いままだと、そのまま新しいホームページに載ってしまいます。<br>" +
       "文章も、必要なところだけ残して、あとは消していただいて構いません。</div>");
+  }
+
+  /* 読み込んだ内容と、すでに書かれている内容がぶつかるかを調べる */
+  function importConflicts(data) {
+    var keys = ["companyName", "pubTel", "pubEmail", "address", "pubHours", "pubClosed"];
+    var n = 0;
+    keys.forEach(function (k) {
+      var v = data.fields[k];
+      var had = String(state[k] || "").trim();
+      if (v && had && had !== String(v)) n++;
+    });
+    (data.pages || []).forEach(function (ip) {
+      var pg = pages.filter(function (p) { return String(p.name).trim() === String(ip.name).trim(); })[0];
+      if (pg && pageType(pg) === "text" && String(pg.body || "").trim() &&
+          String(ip.body || "").trim() && pg.body.trim() !== ip.body.trim()) n++;
+    });
+    return n;
   }
 
   var importing = false;
@@ -1453,7 +1475,17 @@
     setImportMsg("busy", "読み込んでいます… ページ数によっては30秒ほどかかります。");
 
     post({ type: "import", projectId: projectId, url: url })
-      .then(function (res) { applyImport(res.imported); })
+      .then(function (res) {
+        var n = importConflicts(res.imported);
+        var overwrite = false;
+        if (n > 0) {
+          overwrite = window.confirm(
+            "すでにご記入いただいている内容が " + n + " か所あります。\n\n" +
+            "「OK」… 読み込んだ内容で上書きします\n" +
+            "「キャンセル」… 書かれている内容はそのまま残し、空欄だけ埋めます");
+        }
+        applyImport(res.imported, overwrite);
+      })
       .catch(function (err) {
         setImportMsg("ng",
           "読み込めませんでした。" + escapeHtml(err.message || "") + "<br>" +
