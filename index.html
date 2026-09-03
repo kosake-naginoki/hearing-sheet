@@ -1000,6 +1000,61 @@
     try { return !!localStorage.getItem(STORAGE_KEY); } catch (e) { return false; }
   }
 
+  /* 別のURL（間違ったIDや、置き換え忘れのプレースホルダー）で書きかけた内容が
+     この端末に残っていたら、正しいURLで開いたときに引き継げるようにする。
+     渡すURLを間違えても、クライアントに打ち直させずに済ませるための救済処置 */
+  function countFilled(data) {
+    if (!data) return 0;
+    var n = 0;
+    var fields = data.fields || {};
+    Object.keys(fields).forEach(function (k) {
+      var v = fields[k];
+      if (v === true) { n++; return; }
+      if (typeof v === "string" && v.trim()) n++;
+    });
+    (data.pages || []).forEach(function (pg) {
+      if (String(pg && pg.body || "").trim()) n++;
+      (pg && pg.items || []).forEach(function (it) {
+        // 項目の構造はページ種別ごとに違うので、中身のある値を数える
+        Object.keys(it || {}).forEach(function (k) {
+          if (typeof it[k] === "string" && it[k].trim()) n++;
+        });
+      });
+    });
+    return n;
+  }
+
+  /* 引き継げる候補のうち、いちばん多く書かれているものを返す */
+  function findRescueCandidate() {
+    var best = null;
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        if (!key || key.indexOf("hearing-sheet::") !== 0 || key === STORAGE_KEY) continue;
+        var data;
+        try { data = JSON.parse(localStorage.getItem(key)); } catch (e) { continue; }
+        var n = countFilled(data);
+        if (n <= 0) continue;
+        if (!best || n > best.count) best = { key: key, raw: localStorage.getItem(key), count: n };
+      }
+    } catch (e) {}
+    return best;
+  }
+
+  /* この案件に何も保存が無いときだけ声をかける。既存の内容は絶対に上書きしない */
+  function offerRescue() {
+    if (hasSavedInput()) return false;
+    var found = findRescueCandidate();
+    if (!found) return false;
+    var ok = window.confirm(
+      "以前に別のURLで書きかけた内容が、この端末に残っています（" + found.count + " か所）。\n\n" +
+      "こちらに読み込みますか？\n" +
+      "「キャンセル」を選ぶと、空の状態から始めます（残っている内容は消えません）。");
+    if (!ok) return false;
+    try { localStorage.setItem(STORAGE_KEY, found.raw); } catch (e) { return false; }
+    return restore();
+  }
+
   var rail = document.querySelector(".rail");
   var panels = Array.prototype.slice.call(document.querySelectorAll(".panel"));
   var state = {};
@@ -1865,13 +1920,16 @@
       return { name: p.name, type: p.type, guide: p.guide, ph: p.ph, body: "", items: [] };
     });
     var restored = restore();
+    var rescued = false;
+    if (!restored) { rescued = offerRescue(); restored = rescued; }
     ["contact", "purpose", "domainStatus", "reuseText"].forEach(syncProCon);
     renderPages(); renderSuggest(); renderFeatures(); refresh();
     if (company) {
       document.getElementById("brandSub").textContent = company + " 様";
     }
     document.getElementById("shell").style.visibility = "";
-    if (restored) toast("前回の入力内容を復元しました");
+    if (rescued) toast("前のURLで書きかけた内容を読み込みました");
+    else if (restored) toast("前回の入力内容を復元しました");
   }
 
   if (!projectId) {
