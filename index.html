@@ -968,8 +968,37 @@
      打ち間違いに気づかないまま全部書いて弾かれるのを防ぐため、
      ページを開いた時点で照合する。 */
   var params = new URLSearchParams(location.search);
-  var projectId = (params.get("id") || "").trim();
+  /* メール・チャット・IME経由でURLが全角に化けることがあるので半角に直してから使う。
+     サーバ側の sanitizeId_() と同じ正規化にそろえること */
+  function normalizeId(raw) {
+    return String(raw || "").trim()
+      .replace(/[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]/g, function (c) {
+        return String.fromCharCode(c.charCodeAt(0) - 0xFEE0);
+      })
+      .replace(/[\uFF0D\u30FC\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, "-")
+      .replace(/\uFF3F/g, "_")
+      .replace(/[^A-Za-z0-9_\-]/g, "")
+      .slice(0, 64);
+  }
+  var rawProjectId = String(params.get("id") || "").trim();
+  var projectId = normalizeId(rawProjectId);
   var STORAGE_KEY = "hearing-sheet::" + projectId;
+
+  /* 正規化を入れる前は生のIDで保存していた。記入途中の内容が消えたように
+     見えないよう、旧キーのデータを新キーへ引き継ぐ（旧キーは念のため残す） */
+  (function migrateStorageKey() {
+    if (!rawProjectId || rawProjectId === projectId) return;
+    try {
+      var oldKey = "hearing-sheet::" + rawProjectId;
+      if (!localStorage.getItem(STORAGE_KEY) && localStorage.getItem(oldKey)) {
+        localStorage.setItem(STORAGE_KEY, localStorage.getItem(oldKey));
+      }
+    } catch (e) {}
+  })();
+
+  function hasSavedInput() {
+    try { return !!localStorage.getItem(STORAGE_KEY); } catch (e) { return false; }
+  }
 
   var rail = document.querySelector(".rail");
   var panels = Array.prototype.slice.call(document.querySelectorAll(".panel"));
@@ -1693,7 +1722,12 @@
       if (!res.ok) throw new Error("HTTP " + res.status);
       return res.json();
     }).then(function (json) {
-      if (!json || json.ok !== true) throw new Error((json && json.error) || "サーバー側でエラーが発生しました");
+      if (!json || json.ok !== true) {
+        // 通信できなかった場合と区別できるよう、サーバーが返したエラーには印を付ける
+        var e = new Error((json && json.error) || "サーバー側でエラーが発生しました");
+        e.fromServer = true;
+        throw e;
+      }
       return json;
     });
   }
@@ -1852,7 +1886,10 @@
         if (res.valid) startForm(res.company);
         else showInvalid();
       })
-      .catch(function () {
+      .catch(function (err) {
+        // サーバーまで届いたうえで拒否された＝IDが不正。書かせても送信できないので止める。
+        // ただし記入途中の内容が端末に残っている場合は、無効画面で見えなくしない
+        if (err && err.fromServer && !hasSavedInput()) { showInvalid(); return; }
         // 通信できないだけの場合まで入力を止めない（記入内容は端末に残る）
         startForm("");
       });
