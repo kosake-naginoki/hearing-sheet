@@ -873,8 +873,9 @@
   <b id="syncTitle">別の端末で更新されています</b>
   <p id="syncMsg"></p>
   <div class="sync-btns">
-    <button class="btn btn-primary" id="syncTake" type="button">別の端末の内容を読み込む</button>
-    <button class="btn btn-ghost" id="syncKeep" type="button">この端末の内容を使う</button>
+    <button class="btn btn-primary" id="syncMerge" type="button">両方を残す（空いているところだけ埋める）</button>
+    <button class="btn btn-ghost" id="syncTake" type="button">向こうの内容にする</button>
+    <button class="btn btn-ghost" id="syncKeep" type="button">この端末の内容にする</button>
   </div>
 </div>
 
@@ -1051,13 +1052,25 @@
     return n;
   }
 
-  /* 引き継げる候補のうち、いちばん多く書かれているものを返す */
+  /* 発行された案件IDの形（c + 連番3桁 + - + 英数4文字以上）。
+     判定は緩めにする。取りこぼす（＝引き継ぎを控える）方が安全なため */
+  var ISSUED_ID = /^c[0-9]{3}-[a-z0-9]{4,}$/i;
+
+  /* 引き継げる候補のうち、いちばん多く書かれているものを返す。
+     🔴 拾うのは「発行された案件IDでは無いURL」で書かれたものだけ。
+        この仕組みは、プレースホルダーのままのURL（?id=案件名 など）で
+        書いてしまった内容を救うためのもので、
+        **別の案件の内容を持ち込むためのものではない**。
+        制作側の端末には複数案件の控えが残るため、ここを絞らないと
+        他社の記入内容が別の案件に混ざり、そのままサーバーにも上がってしまう
+        （2026-09-04 に実際に発生）。 */
   function findRescueCandidate() {
     var best = null;
     try {
       for (var i = 0; i < localStorage.length; i++) {
         var key = localStorage.key(i);
         if (!key || key.indexOf("hearing-sheet::") !== 0 || key === STORAGE_KEY) continue;
+        if (ISSUED_ID.test(normalizeId(key.slice("hearing-sheet::".length)))) continue;
         var data;
         try { data = JSON.parse(localStorage.getItem(key)); } catch (e) { continue; }
         var n = countFilled(data);
@@ -1068,9 +1081,9 @@
     return best;
   }
 
-  /* この案件に何も保存が無いときだけ声をかける。既存の内容は絶対に上書きしない */
+  /* いま画面に何も無いときだけ声をかける。既存の内容は絶対に上書きしない */
   function offerRescue() {
-    if (hasSavedInput()) return false;
+    if (countFilled(snapshot()) > 0) return false;
     var found = findRescueCandidate();
     if (!found) return false;
     var ok = window.confirm(
@@ -1273,12 +1286,12 @@
           setSaveState("", "保存済み（共有）");
           return false;
         }
-        // この端末が空 ＝ 別の端末で書かれた続きを読み込むだけでよい
+        // この端末が空 ＝ 別の端末で書かれた続き（または送信済みの内容）を読み込む
         if (localCount === 0) {
           serverRev = res.rev;
           applyDraft(remote); saveLocal();
           setSaveState("", "保存済み（共有）");
-          toast("前回の続きを読み込みました");
+          toast(res.fromAnswers ? "送信済みの内容を読み込みました" : "前回の続きを読み込みました");
           return true;
         }
         // この端末が最後に上げた版のまま ＝ 手元の方が新しい
@@ -1304,10 +1317,13 @@
     var whenText = (when && !isNaN(when.getTime()))
       ? (when.getMonth() + 1) + "月" + when.getDate() + "日 " + hhmm(when) + "・"
       : "";
+    document.getElementById("syncTitle").textContent =
+      res.fromAnswers ? "送信済みの内容が見つかりました" : "別の端末で更新されています";
     document.getElementById("syncMsg").textContent =
-      "別の端末から入力された内容があります（" + whenText + "記入 " + countFilled(res.draft) + " か所）。" +
-      "この端末の書きかけは " + countFilled(snapshot()) + " か所です。どちらを使うか選んでください。" +
-      "「別の端末の内容を読み込む」を選ぶと、この端末の書きかけは置き換わります。";
+      (res.fromAnswers ? "以前に送信された内容があります（" : "別の端末から入力された内容があります（") +
+      whenText + "記入 " + countFilled(res.draft) + " か所）。" +
+      "この端末の書きかけは " + countFilled(snapshot()) + " か所です。" +
+      "「両方を残す」なら、いま書かれている内容はそのままで、空いているところだけが埋まります。";
     document.getElementById("syncBar").classList.add("show");
     setSaveState("warn", "別の端末で更新されています");
   }
@@ -1317,6 +1333,69 @@
     pendingRemote = null;
     draftPaused = false;
   }
+
+  /**
+   * 相手の内容を「足す」だけの取り込み。
+   * いま書かれている内容は絶対に上書きしない（空いているところだけ埋める）。
+   * どちらを捨てるか決めさせないための選択肢なので、既定にしている。
+   */
+  function mergeDraft(mine, theirs) {
+    var mf = (mine && mine.fields) || {};
+    var tf = (theirs && theirs.fields) || {};
+    var out = { fields: {}, pages: [], features: [] };
+
+    // 先に相手を置き、こちらの値で上書きする（＝こちらが優先）
+    Object.keys(tf).forEach(function (k) {
+      if (String(tf[k] === undefined ? "" : tf[k]).trim()) out.fields[k] = tf[k];
+    });
+    Object.keys(mf).forEach(function (k) {
+      if (String(mf[k] === undefined ? "" : mf[k]).trim()) out.fields[k] = mf[k];
+    });
+
+    var theirPages = (theirs && theirs.pages) || [];
+    var defaultNames = DEFAULT_PAGES.map(function (p) { return p.name; });
+    // まだ一度も書いていない既定のページは、相手側の構成に合わせて畳む
+    // （書いたものは名前が既定と同じでも必ず残す）
+    out.pages = ((mine && mine.pages) || []).filter(function (mp) {
+      if (!theirPages.length) return true;
+      if (String(mp.body || "").trim() || (mp.items || []).length) return true;
+      return defaultNames.indexOf(String(mp.name || "").trim()) < 0;
+    });
+    theirPages.forEach(function (tp) {
+      var name = String(tp.name || "").trim();
+      var same = null;
+      out.pages.forEach(function (mp) {
+        if (!same && String(mp.name || "").trim() === name) same = mp;
+      });
+      if (!same) { out.pages.push(tp); return; }
+      // 同じ名前のページは、こちらが空のときだけ相手の内容で埋める
+      if (!String(same.body || "").trim() && String(tp.body || "").trim()) same.body = tp.body;
+      if (!(same.items || []).length && (tp.items || []).length) same.items = tp.items;
+    });
+
+    out.features = ((mine && mine.features) || []).slice();
+    ((theirs && theirs.features) || []).forEach(function (tfe) {
+      var name = String(tfe.name || "").trim();
+      if (!name) return;
+      var dup = out.features.some(function (f) { return String(f.name || "").trim() === name; });
+      if (!dup) out.features.push(tfe);
+    });
+
+    return out;
+  }
+
+  document.getElementById("syncMerge").addEventListener("click", function () {
+    var res = pendingRemote;
+    if (!res) { hideRemoteChoice(); return; }
+    serverRev = res.rev;
+    applyDraft(mergeDraft(snapshot(), res.draft));
+    saveLocal();
+    hideRemoteChoice();
+    setSaveState("", "保存しています…");
+    pushDraft().then(function (ok) {
+      toast(ok ? "両方の内容をまとめました" : "まとめました（サーバーへの保存は次の入力で再試行します）");
+    });
+  });
 
   document.getElementById("syncTake").addEventListener("click", function () {
     var res = pendingRemote;
@@ -2141,18 +2220,24 @@
       return { name: p.name, type: p.type, guide: p.guide, ph: p.ph, body: "", items: [] };
     });
     var restored = restore();
-    var rescued = false;
-    if (!restored) { rescued = offerRescue(); restored = rescued; }
     ["contact", "purpose", "domainStatus", "reuseText"].forEach(syncProCon);
     renderPages(); renderSuggest(); renderFeatures(); refresh();
     if (company) {
       document.getElementById("brandSub").textContent = company + " 様";
     }
     document.getElementById("shell").style.visibility = "";
-    if (rescued) toast("前のURLで書きかけた内容を読み込みました");
-    else if (restored) toast("前回の入力内容を復元しました");
-    // 別の端末で書かれた続きがあれば取り込む（無ければこの端末の内容を上げる）
-    syncDraft();
+    if (restored) toast("前回の入力内容を復元しました");
+
+    // まずサーバーと突き合わせる（別の端末で書かれた続き・送信済みの内容を取り込む）。
+    // それでも何も無いときにだけ、別URLで書きかけた内容の引き継ぎを尋ねる。
+    // 順番を逆にすると、引き継ぎの確認とサーバー側の確認が二重に出てしまう
+    syncDraft().then(function () {
+      if (countFilled(snapshot()) > 0) return;
+      if (offerRescue()) {
+        toast("前のURLで書きかけた内容を読み込みました");
+        queueDraftPush();
+      }
+    });
   }
 
   if (!projectId) {
