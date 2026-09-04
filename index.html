@@ -83,6 +83,23 @@
   }
   .save-state .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px var(--good-wash); }
   .save-state.saving .dot { background: var(--warn); box-shadow: 0 0 0 3px var(--warn-wash); }
+  .save-state.offline .dot { background: var(--ink-faint); box-shadow: 0 0 0 3px var(--surface-2); }
+  .save-state.warn { border-color: var(--warn); color: var(--warn); }
+  .save-state.warn .dot { background: var(--warn); box-shadow: 0 0 0 3px var(--warn-wash); }
+
+  /* 別の端末で内容が更新されていたときの選択バー */
+  .sync-bar {
+    position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 24px);
+    width: min(620px, calc(100% - 32px)); z-index: 60;
+    background: var(--surface); border: 1px solid var(--warn);
+    border-radius: 14px; box-shadow: var(--shadow);
+    padding: 16px 18px; opacity: 0; pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .sync-bar.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .sync-bar b { display: block; font-size: 14px; margin-bottom: 6px; color: var(--warn); }
+  .sync-bar p { font-size: 13px; line-height: 1.7; color: var(--ink-muted); margin: 0 0 12px; }
+  .sync-btns { display: flex; gap: 10px; flex-wrap: wrap; }
 
   .overall { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-muted); }
   .overall .bar { width: 130px; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
@@ -463,14 +480,14 @@
       <b id="overallPct">0%</b>
     </div>
     <div class="save-state" id="saveState">
-      <i class="dot"></i><span id="saveText">この端末に保存されます</span>
+      <i class="dot"></i><span id="saveText">自動保存されます</span>
     </div>
   </div>
 </header>
 
 <div class="shell" id="shell" style="visibility:hidden">
   <nav class="rail" role="tablist" aria-label="ヒアリング項目">
-    <p class="rail-note">全部まとめて書く必要はありません。分かるところから、何回かに分けてご記入ください。入力内容はこの端末に自動保存されます。</p>
+    <p class="rail-note">全部まとめて書く必要はありません。分かるところから、何回かに分けてご記入ください。入力内容は自動で保存され、あとから同じURLを開けば、別の端末からでも続きを書けます。</p>
   </nav>
 
   <main id="panels">
@@ -749,6 +766,7 @@
         <span class="eyebrow">Step 05</span>
         <h2>素材・既存サイト</h2>
         <p>すでにある文章や写真は、そのまま活かせます。ゼロから書き起こす必要はありません。</p>
+        <p class="hint">※ 文章は別の端末からでも続きを書けますが、ここで選んだファイルは送信するまでこの端末にだけ残ります。別の端末で添付し直す場合は、お手数ですがもう一度お選びください。</p>
       </div>
 
       <div class="card">
@@ -838,7 +856,7 @@
 <div class="done-screen" id="doneScreen">
   <div class="mark" aria-hidden="true">✓</div>
   <h2>送信が完了しました</h2>
-  <p>ご記入ありがとうございました。内容を確認のうえ、担当者よりご連絡いたします。<br>あとから思い出したことがあれば、このページに戻って追記・再送信していただけます。</p>
+  <p>ご記入ありがとうございました。内容を確認のうえ、担当者よりご連絡いたします。<br>ご記入いただいた内容はそのまま残っています。あとから思い出したことがあれば、別の端末からでも同じURLを開いて追記・再送信していただけます。</p>
   <button class="btn btn-ghost" id="btnBack" type="button">入力画面に戻る</button>
 </div>
 
@@ -848,6 +866,15 @@
     <p id="ovMsg">このページを閉じずにお待ちください</p>
     <div class="pbar"><i id="ovBar"></i></div>
     <div class="pnum" id="ovNum"></div>
+  </div>
+</div>
+
+<div class="sync-bar" id="syncBar" role="alertdialog" aria-live="polite" aria-labelledby="syncTitle">
+  <b id="syncTitle">別の端末で更新されています</b>
+  <p id="syncMsg"></p>
+  <div class="sync-btns">
+    <button class="btn btn-primary" id="syncTake" type="button">別の端末の内容を読み込む</button>
+    <button class="btn btn-ghost" id="syncKeep" type="button">この端末の内容を使う</button>
   </div>
 </div>
 
@@ -1088,26 +1115,87 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  /* ---------- 保存・復元 ---------- */
+  /* ---------- 保存・復元 ----------
+     二か所に保存する。
+       ・この端末（localStorage） … 即時。通信できなくても消えない
+       ・サーバー（GASの下書き）   … 数秒後。別の端末・別の人が続きを書ける
+
+     サーバー側は版番号（rev）で管理する。読み込んだ版と食い違ったら
+     （＝その間に別の端末が保存していたら）黙って上書きせず、
+     どちらを残すか本人に選んでもらう。文字単位の自動マージはしない。 */
   var saveTimer = null;
-  function save() {
+  var serverRev = null;    // 直近でサーバーと一致した版。null = まだ突き合わせできていない
+  var draftTimer = null;
+  var draftBusy = false;   // 送信中
+  var draftAgain = false;  // 送信中にさらに変更があった
+  var draftPaused = false; // 競合を解決するまでサーバーへ送らない
+  var lastRemoteCheck = 0;
+  var pendingRemote = null;
+
+  function pad(n) { return String(n).padStart(2, "0"); }
+  function hhmm(d) { return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+
+  /* いま画面にある内容。localStorage にもサーバーにも同じ形で入れる */
+  function snapshot() {
+    return { fields: state, pages: pages, features: features };
+  }
+
+  function setSaveState(kind, text) {
     var el = document.getElementById("saveState");
-    el.classList.add("saving");
-    document.getElementById("saveText").textContent = "保存しています…";
+    el.classList.toggle("saving", kind === "saving");
+    el.classList.toggle("offline", kind === "offline");
+    el.classList.toggle("warn", kind === "warn");
+    document.getElementById("saveText").textContent = text;
+  }
+
+  function saveLocal() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        fields: state, pages: pages, features: features,
+        rev: serverRev, savedAt: Date.now()
+      }));
+    } catch (e) {}
+  }
+
+  /* この端末に最後に保存したときの版。サーバーの版と比べて
+     「手元が最新か・別の端末が進んでいるか」を見分けるのに使う */
+  function localRev() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      var d = JSON.parse(raw);
+      return (d && typeof d.rev === "number") ? d.rev : null;
+    } catch (e) { return null; }
+  }
+
+  function save() {
+    setSaveState("saving", "保存しています…");
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          fields: state, pages: pages, features: features
-        }));
-      } catch (e) {}
-      el.classList.remove("saving");
-      var d = new Date();
-      document.getElementById("saveText").textContent =
-        "保存済み " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+      saveLocal();
+      setSaveState("", "保存済み " + hhmm(new Date()));
+      queueDraftPush();
     }, 550);
   }
-  function pad(n) { return String(n).padStart(2, "0"); }
+
+  /* 画面に反映する。restore（この端末の控え）とサーバーの下書きで共通 */
+  function applyDraft(data) {
+    if (!data) return false;
+    state = data.fields || {};
+    if (Array.isArray(data.pages) && data.pages.length) pages = data.pages;
+    if (Array.isArray(data.features)) features = data.features;
+
+    document.querySelectorAll("[data-key]").forEach(function (el) {
+      var v = state[el.dataset.key];
+      // 別の内容で置き換えるときは、前の内容が画面に残らないよう空も反映する
+      if (el.type === "checkbox") { el.checked = !!v; return; }
+      if (el.type === "radio") { el.checked = (el.value === v); return; }
+      el.value = (v === undefined || v === null) ? "" : v;
+    });
+    ["contact", "purpose", "domainStatus", "reuseText"].forEach(syncProCon);
+    renderPages(); renderSuggest(); renderFeatures(); refresh();
+    return true;
+  }
 
   function restore() {
     var raw = null;
@@ -1116,20 +1204,146 @@
     var data;
     try { data = JSON.parse(raw); } catch (e) { return false; }
     if (!data) return false;
-
-    state = data.fields || {};
-    if (Array.isArray(data.pages) && data.pages.length) pages = data.pages;
-    if (Array.isArray(data.features)) features = data.features;
-
-    document.querySelectorAll("[data-key]").forEach(function (el) {
-      var v = state[el.dataset.key];
-      if (v === undefined || v === null) return;
-      if (el.type === "checkbox") el.checked = !!v;
-      else if (el.type === "radio") el.checked = (el.value === v);
-      else el.value = v;
-    });
-    return true;
+    return applyDraft(data);
   }
+
+  /* ---------- サーバー下書き（端末をまたいだ引き継ぎ） ---------- */
+
+  function queueDraftPush() {
+    if (!GAS_URL || !projectId) return;
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(function () { pushDraft(); }, 2500);
+  }
+
+  function pushDraft() {
+    if (!GAS_URL || !projectId || draftPaused) return Promise.resolve(false);
+    if (draftBusy) { draftAgain = true; return Promise.resolve(false); }
+
+    // サーバーの版が分からないまま送ると、別の端末の内容を消しかねない。
+    // 先に読み込んで突き合わせてから送る
+    if (serverRev === null) {
+      return syncDraft().then(function () {
+        if (serverRev === null || draftPaused) return false;
+        return pushDraft();
+      });
+    }
+
+    draftBusy = true;
+    return post({ type: "draftSave", projectId: projectId, baseRev: serverRev, data: snapshot() })
+      .then(function (res) {
+        // 送ろうとした間に別の端末が保存していた。上書きせず選んでもらう
+        if (res.conflict) { showRemoteChoice(res); return false; }
+        serverRev = res.rev;
+        saveLocal();
+        setSaveState("", "保存済み " + hhmm(new Date()) + "（共有）");
+        return true;
+      })
+      .catch(function () {
+        // 通信できないだけ。入力内容はこの端末に残っている
+        setSaveState("offline", "この端末に保存（未同期）");
+        return false;
+      })
+      .then(function (ok) {
+        draftBusy = false;
+        if (draftAgain) { draftAgain = false; queueDraftPush(); }
+        return ok;
+      });
+  }
+
+  /* サーバーの下書きと突き合わせる。開いたとき・タブに戻ったときに走る */
+  function syncDraft() {
+    if (!GAS_URL || !projectId) return Promise.resolve(false);
+    lastRemoteCheck = Date.now();
+    return post({ type: "draftLoad", projectId: projectId })
+      .then(function (res) {
+        var remote = res.draft || null;
+        var remoteCount = countFilled(remote);
+        var localCount = countFilled(snapshot());
+
+        // サーバーに中身が無い ＝ この端末の内容が唯一の記入。上げておく
+        if (!remote || remoteCount === 0) {
+          serverRev = res.rev;
+          if (localCount > 0) return pushDraft();
+          saveLocal();
+          return false;
+        }
+        // 中身が同じなら何もしない
+        if (JSON.stringify(remote) === JSON.stringify(snapshot())) {
+          serverRev = res.rev; saveLocal();
+          setSaveState("", "保存済み（共有）");
+          return false;
+        }
+        // この端末が空 ＝ 別の端末で書かれた続きを読み込むだけでよい
+        if (localCount === 0) {
+          serverRev = res.rev;
+          applyDraft(remote); saveLocal();
+          setSaveState("", "保存済み（共有）");
+          toast("前回の続きを読み込みました");
+          return true;
+        }
+        // この端末が最後に上げた版のまま ＝ 手元の方が新しい
+        if (localRev() !== null && localRev() === res.rev) {
+          serverRev = res.rev;
+          return pushDraft();
+        }
+        // 両方に中身があり、版も食い違う。勝手に選ばない
+        showRemoteChoice(res);
+        return false;
+      })
+      .catch(function () {
+        serverRev = null;
+        setSaveState("offline", "この端末に保存（未同期）");
+        return false;
+      });
+  }
+
+  function showRemoteChoice(res) {
+    draftPaused = true;
+    pendingRemote = res;
+    var when = res.updatedAt ? new Date(res.updatedAt) : null;
+    var whenText = (when && !isNaN(when.getTime()))
+      ? (when.getMonth() + 1) + "月" + when.getDate() + "日 " + hhmm(when) + "・"
+      : "";
+    document.getElementById("syncMsg").textContent =
+      "別の端末から入力された内容があります（" + whenText + "記入 " + countFilled(res.draft) + " か所）。" +
+      "この端末の書きかけは " + countFilled(snapshot()) + " か所です。どちらを使うか選んでください。" +
+      "「別の端末の内容を読み込む」を選ぶと、この端末の書きかけは置き換わります。";
+    document.getElementById("syncBar").classList.add("show");
+    setSaveState("warn", "別の端末で更新されています");
+  }
+
+  function hideRemoteChoice() {
+    document.getElementById("syncBar").classList.remove("show");
+    pendingRemote = null;
+    draftPaused = false;
+  }
+
+  document.getElementById("syncTake").addEventListener("click", function () {
+    var res = pendingRemote;
+    if (!res) { hideRemoteChoice(); return; }
+    serverRev = res.rev;
+    applyDraft(res.draft);
+    saveLocal();
+    hideRemoteChoice();
+    setSaveState("", "保存済み（共有）");
+    toast("別の端末の内容を読み込みました");
+  });
+
+  document.getElementById("syncKeep").addEventListener("click", function () {
+    var res = pendingRemote;
+    if (!res) { hideRemoteChoice(); return; }
+    // 相手の版を土台にして、この端末の内容で上書きする
+    serverRev = res.rev;
+    hideRemoteChoice();
+    pushDraft().then(function (ok) { if (ok) toast("この端末の内容で保存しました"); });
+  });
+
+  /* 開きっぱなしのタブに戻ってきたとき、別の端末の更新を拾う */
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden || draftPaused || !GAS_URL || !projectId) return;
+    if (Date.now() - lastRemoteCheck < 20000) return;
+    syncDraft();
+  });
 
   /* ---------- 固定項目の入力 ---------- */
   document.querySelectorAll("[data-key]").forEach(function (el) {
@@ -1840,6 +2054,9 @@
         return post({ type: "finalize", projectId: projectId });
       })
       .then(function () {
+        // 送信した内容をそのまま下書きにも残す。
+        // 別の端末から同じURLを開けば、この続きから書ける
+        pushDraft();
         setProgress(total, total, "完了しました");
         showOverlay(false);
         document.getElementById("shell").style.display = "none";
@@ -1881,7 +2098,7 @@
 
   /* ---------- クリア ---------- */
   document.getElementById("btnClear").addEventListener("click", function () {
-    if (!window.confirm("この端末に保存されている入力内容をすべて消します。よろしいですか？")) return;
+    if (!window.confirm("入力内容をすべて消します。\n別の端末から見える内容も消えます。よろしいですか？\n\n※ 送信済みの内容は制作会社に届いたまま残ります。")) return;
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
     state = {};
     features = [];
@@ -1897,6 +2114,10 @@
       files[k] = []; renderFiles(k);
     });
     renderPages(); renderSuggest(); renderFeatures(); refresh();
+    // 空になった状態をサーバーにも反映する（消したはずの内容が別の端末から戻らないように）
+    hideRemoteChoice();
+    saveLocal();
+    pushDraft();
     toast("入力内容を消しました");
   });
 
@@ -1930,6 +2151,8 @@
     document.getElementById("shell").style.visibility = "";
     if (rescued) toast("前のURLで書きかけた内容を読み込みました");
     else if (restored) toast("前回の入力内容を復元しました");
+    // 別の端末で書かれた続きがあれば取り込む（無ければこの端末の内容を上げる）
+    syncDraft();
   }
 
   if (!projectId) {
